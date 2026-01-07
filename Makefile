@@ -1,8 +1,8 @@
 run_local:
-	python -m recipebot.drivers.main
+	export PYTHONPATH=$(PWD) && . venv/bin/activate && streamlit run medicalagent/drivers/main.py
 
 requirements:
-	python -m pip install --upgrade pip setuptools wheel && python -m pip install -r requirements.txt
+	. venv/bin/activate && python -m pip install --upgrade pip setuptools wheel && python -m pip install -r requirements.txt
 
 # Linting
 lint: mypy ruff bandit
