@@ -6,6 +6,7 @@ from medicalagent.data.mock_data import (
     generate_mock_finding,
 )
 from medicalagent.drivers.di import di
+from medicalagent.drivers.user_service import get_current_user
 
 
 def render_chat_header(active_dialog):
@@ -58,9 +59,14 @@ def handle_chat_input():
 
 def render_central_chat():
     """Renders the central chat interface with research capabilities."""
-    active_dialog = di.dialog_repository.get_by_id(
-        st.session_state.get("active_dialog_id")
-    )
+    user = get_current_user()
+    active_dialog_id = st.session_state.get("active_dialog_id")
+    active_dialog = None
+
+    if user and active_dialog_id:
+        active_dialog = next(
+            (d for d in user.get_dialogs() if d.id == active_dialog_id), None
+        )
 
     render_chat_header(active_dialog)
     render_chat_messages()

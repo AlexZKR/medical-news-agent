@@ -3,9 +3,10 @@
 from medicalagent.adapters.repositories import (
     InMemoryDialogRepository,
     InMemoryFindingsRepository,
+    InMemoryUserRepository,
 )
 from medicalagent.data.mock_data import get_initial_research_results
-from medicalagent.ports import DialogRepository, FindingsRepository
+from medicalagent.ports import DialogRepository, FindingsRepository, UserRepository
 
 
 class DIContainer:
@@ -15,6 +16,7 @@ class DIContainer:
         """Initialize the DI container with concrete implementations."""
         self._dialog_repository = InMemoryDialogRepository()
         self._findings_repository = InMemoryFindingsRepository()
+        self._user_repository = InMemoryUserRepository()
 
         # Initialize findings repository with default data for dialog 1
         initial_findings = get_initial_research_results(1)
@@ -30,6 +32,11 @@ class DIContainer:
     def findings_repository(self) -> FindingsRepository:
         """Get the findings repository instance."""
         return self._findings_repository
+
+    @property
+    def user_repository(self) -> UserRepository:
+        """Get the user repository instance."""
+        return self._user_repository
 
 
 # Global DI container instance
