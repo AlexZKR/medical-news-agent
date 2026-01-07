@@ -1,6 +1,6 @@
 import streamlit as st
 
-from medicalagent.data.mock_data import get_findings
+from medicalagent.drivers.di import di
 
 from .result_list import render_result_list
 
@@ -15,7 +15,7 @@ def render_right_sidebar():
     # Get findings for the current active dialog
     active_dialog_id = st.session_state.get("active_dialog_id", 1)
 
-    current_findings = get_findings(active_dialog_id)
+    current_findings = di.findings_repository.get_by_dialog_id(active_dialog_id)
 
     render_right_sidebar_header()
     render_result_list(current_findings)

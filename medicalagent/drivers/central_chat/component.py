@@ -3,11 +3,9 @@ import time
 import streamlit as st
 
 from medicalagent.data.mock_data import (
-    add_finding,
     generate_mock_finding,
-    get_dialog,
-    get_initial_chat_history,
 )
+from medicalagent.drivers.di import di
 
 
 def render_chat_header(active_dialog):
@@ -16,12 +14,6 @@ def render_chat_header(active_dialog):
         st.subheader(f"💬 {active_dialog.title}")
     else:
         st.subheader("💬 No dialog selected")
-
-
-def initialize_chat_state():
-    """Initializes chat history if they don't exist."""
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = get_initial_chat_history()
 
 
 def render_chat_messages():
@@ -46,7 +38,7 @@ def generate_assistant_response(prompt):
         active_dialog_id = st.session_state.get("active_dialog_id", 1)
         new_finding = generate_mock_finding(prompt, active_dialog_id)
         # Add to findings store
-        add_finding(new_finding)
+        di.findings_repository.save(new_finding)
 
         # Force a rerun so the Right Sidebar updates immediately
         st.rerun()
@@ -66,9 +58,10 @@ def handle_chat_input():
 
 def render_central_chat():
     """Renders the central chat interface with research capabilities."""
-    active_dialog = get_dialog(st.session_state.get("active_dialog_id"))
+    active_dialog = di.dialog_repository.get_by_id(
+        st.session_state.get("active_dialog_id")
+    )
 
     render_chat_header(active_dialog)
-    initialize_chat_state()
     render_chat_messages()
     handle_chat_input()

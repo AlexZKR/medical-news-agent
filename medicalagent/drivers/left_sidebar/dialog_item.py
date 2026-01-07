@@ -1,6 +1,7 @@
 import streamlit as st
 
-from medicalagent.data.mock_data import create_dialog, get_dialog
+from medicalagent.domain.dialog import Dialog
+from medicalagent.drivers.di import di
 
 
 def handle_title_click(dialog):
@@ -9,23 +10,31 @@ def handle_title_click(dialog):
 
     # Load dialog-specific chat history
     # For now, use mock dialog data or create defaults
-    active_dialog = get_dialog(dialog.id)
+    active_dialog = di.dialog_repository.get_by_id(dialog.id)
     if active_dialog:
         st.session_state.chat_history = active_dialog.chat_history
     else:
         # Fallback for newly created dialogs
-        new_dialog = create_dialog()
-        new_dialog.id = dialog.id
-        st.session_state.chat_history = new_dialog.chat_history
+        # Try to get from repository, otherwise create default
+        repo_dialog = di.dialog_repository.get_by_id(dialog.id)
+        if repo_dialog:
+            st.session_state.chat_history = repo_dialog.chat_history
+        else:
+            # Create a basic dialog with default chat history
+            default_dialog = Dialog(id=dialog.id, title=dialog.title, chat_history=[])
+            st.session_state.chat_history = default_dialog.chat_history
 
     st.rerun()
 
 
 def handle_delete_click(dialog):
     """Handles delete button click logic."""
-    # Remove this dialog from session state if it's active
-    if st.session_state.active_dialog_id == dialog.id:
-        st.session_state.active_dialog_id = 1
+    # Delete the dialog from repository
+    di.dialog_repository.delete(dialog.id)
+
+    st.session_state.active_dialog_id = None
+    st.session_state.chat_history = []
+
     st.rerun()
 
 
@@ -48,7 +57,6 @@ def render_delete_button(dialog):
         "",
         icon="🗑️",
         key=f"delete_{dialog.id}",
-        help=f"Delete {dialog.title}",
         type="secondary",
     )
 

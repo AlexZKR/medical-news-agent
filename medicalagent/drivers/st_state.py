@@ -1,12 +1,18 @@
 import streamlit as st
 
-from .defaults import DEFAULT_SETTINGS, DEFAULT_TRUSTED_SOURCES, DEFAULT_UI_STATE
+from .di import di
 
 
 def init_state():
     """Initialize the session state."""
     if "init" not in st.session_state:
-        st.session_state.trusted_sources = DEFAULT_TRUSTED_SOURCES.copy()
-        st.session_state.settings = DEFAULT_SETTINGS.copy()
-        st.session_state.init = DEFAULT_UI_STATE["init"]
-        st.session_state.active_dialog_id = DEFAULT_UI_STATE["active_dialog_id"]
+        st.session_state.init = True
+
+        # Get all dialogs and set the first one as active
+        dialogs = di.dialog_repository.get_all()
+        if dialogs:
+            st.session_state.active_dialog_id = dialogs[0].id
+            st.session_state.chat_history = dialogs[0].chat_history
+        else:
+            st.session_state.active_dialog_id = None
+            st.session_state.chat_history = []
