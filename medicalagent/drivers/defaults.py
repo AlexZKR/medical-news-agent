@@ -16,8 +16,7 @@ DEFAULT_TRUSTED_SOURCES = [
 
 # UI State Defaults
 DEFAULT_UI_STATE = {
-    "right_sidebar_visible": True,
-    "active_dialog": "dialog_1",
+    "active_dialog_id": 1,
     "init": True,
 }
 
@@ -31,9 +30,6 @@ DEFAULT_WELCOME_MESSAGE = {
 NEW_DIALOG_PLACEHOLDER = {
     "id": None,  # Will be set dynamically
     "title": "New Research Discussion",
-    "last_message": "Just started...",
-    "timestamp": "now",
-    "message_count": 1,
 }
 
 # Dialog Switch Messages

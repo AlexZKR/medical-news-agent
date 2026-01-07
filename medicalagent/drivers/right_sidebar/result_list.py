@@ -1,8 +1,7 @@
 import streamlit as st
 
-from medicalagent.drivers.main_content.right_sidebar.result_card import (
-    render_result_card,
-)
+from medicalagent.domain.dialog import Finding
+from medicalagent.drivers.right_sidebar.result_card import render_result_card
 
 # Container Heights
 RESULT_LIST_HEIGHT = 800  # pixels
@@ -18,21 +17,13 @@ def render_result_list_empty():
     st.caption(EMPTY_FINDINGS_CAPTION)
 
 
-def render_result_list():
+def render_result_list(research_results: list[Finding]):
     """Renders the list of research findings."""
 
-    if (
-        "research_results" not in st.session_state
-        or not st.session_state.research_results
-    ):
+    if not research_results:
         render_result_list_empty()
         return
 
-    active_results = [
-        r
-        for r in reversed(st.session_state.research_results)
-        if r.get("status") != "dismissed"
-    ]
     with st.container(border=False, height=RESULT_LIST_HEIGHT):
-        for item in active_results:
+        for item in reversed(research_results):
             render_result_card(item)
