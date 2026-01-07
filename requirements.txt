@@ -1,0 +1,6 @@
+streamlit
+langchain
+pydantic
+pydantic-settings
+
+-r requirements-dev.txt

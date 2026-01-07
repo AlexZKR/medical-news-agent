@@ -1,0 +1,11 @@
+{
+  "python.testing.pytestArgs": ["recipebot/tests", "-vvv"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "ruff.enable": true,
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.ruff": "explicit"
+  }
+}
