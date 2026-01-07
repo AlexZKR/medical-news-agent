@@ -1,12 +1,12 @@
-import time
+import re
 
 import streamlit as st
 
-from medicalagent.data.mock_data import (
-    generate_mock_finding,
-)
-from medicalagent.drivers.di import di
+from medicalagent.drivers.di import di_container
 from medicalagent.drivers.user_service import get_current_user
+
+# Constants
+MAX_RESPONSE_LENGTH = 2000
 
 
 def render_chat_header(active_dialog):
@@ -28,21 +28,57 @@ def generate_assistant_response(prompt):
     """Generates and displays the assistant's response to user input."""
     with st.chat_message("assistant"):
         msg_ph = st.empty()
-        msg_ph.markdown("🔍 *Scanning trusted sources...*")
-        time.sleep(1.0)  # Latency simulation
+        msg_ph.markdown("🔍 *Scanning trusted medical sources...*")
 
-        resp = f"I've searched for **'{prompt}'**. Here are some findings."
-        msg_ph.markdown(resp)
-        st.session_state.chat_history.append({"role": "assistant", "content": resp})
+        try:
+            # Invoke the LangGraph agent with proper input format
+            result = di_container.agent.invoke({"input": prompt})
 
-        # Mock Finding - create new research result
-        active_dialog_id = st.session_state.get("active_dialog_id", 1)
-        new_finding = generate_mock_finding(prompt, active_dialog_id)
-        # Add to findings store
-        di.findings_repository.save(new_finding)
+            # Extract the response from the agent result
+            # LangGraph agents typically return a dict with messages
+            if isinstance(result, dict) and "messages" in result:
+                # Get the last AI message
+                messages = result["messages"]
+                for msg in reversed(messages):
+                    if hasattr(msg, "type") and msg.type == "ai":
+                        response_text = msg.content
+                        break
+                    elif hasattr(msg, "content"):
+                        response_text = msg.content
+                        break
+                else:
+                    response_text = str(result)
+            elif hasattr(result, "content"):
+                response_text = result.content
+            else:
+                # Fallback: try to convert to string
+                response_text = str(result)
 
-        # Force a rerun so the Right Sidebar updates immediately
-        st.rerun()
+            # Remove thinking tags from the response
+            response_text = re.sub(
+                r"<think>.*?</think>", "", response_text, flags=re.DOTALL
+            ).strip()
+
+            # Clean up the response if it's too verbose
+            if len(response_text) > MAX_RESPONSE_LENGTH:
+                response_text = (
+                    response_text[:MAX_RESPONSE_LENGTH]
+                    + "...\n\n*Response truncated for readability*"
+                )
+
+            msg_ph.markdown(response_text)
+            st.session_state.chat_history.append(
+                {"role": "assistant", "content": response_text}
+            )
+
+        except Exception as e:
+            error_msg = (
+                f"Sorry, I encountered an error while researching your query: {str(e)}"
+            )
+            msg_ph.markdown(error_msg)
+            st.session_state.chat_history.append(
+                {"role": "assistant", "content": error_msg}
+            )
 
 
 def handle_chat_input():

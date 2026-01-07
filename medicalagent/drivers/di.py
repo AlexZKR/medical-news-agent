@@ -1,5 +1,8 @@
 """Dependency injection container for the Medical News Agent."""
 
+from langgraph.graph.state import CompiledStateGraph
+
+from medicalagent.adapters.agent.langchain_base import agent_init
 from medicalagent.adapters.repositories import (
     InMemoryDialogRepository,
     InMemoryFindingsRepository,
@@ -17,6 +20,7 @@ class DIContainer:
         self._dialog_repository = InMemoryDialogRepository()
         self._findings_repository = InMemoryFindingsRepository()
         self._user_repository = InMemoryUserRepository()
+        self._agent = agent_init()
 
         # Initialize findings repository with default data for dialog 1
         initial_findings = get_initial_research_results(1)
@@ -27,6 +31,11 @@ class DIContainer:
     def dialog_repository(self) -> DialogRepository:
         """Get the dialog repository instance."""
         return self._dialog_repository
+
+    @property
+    def agent(self) -> CompiledStateGraph:
+        """Get the agent instance."""
+        return self._agent
 
     @property
     def findings_repository(self) -> FindingsRepository:
@@ -40,4 +49,4 @@ class DIContainer:
 
 
 # Global DI container instance
-di = DIContainer()
+di_container = DIContainer()

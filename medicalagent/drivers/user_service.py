@@ -3,7 +3,7 @@
 import streamlit as st
 
 from ..domain.user import UserData
-from .di import di
+from .di import di_container
 
 
 def get_current_user_email() -> str | None:
@@ -24,7 +24,7 @@ def get_current_user() -> UserData | None:
     if not email:
         return None
 
-    user_repo = di.user_repository
+    user_repo = di_container.user_repository
     user_data = user_repo.get_by_email(email)
 
     if not user_data:
@@ -36,7 +36,7 @@ def get_current_user() -> UserData | None:
 
 def save_current_user(user_data: UserData) -> None:
     """Save the current user's data."""
-    user_repo = di.user_repository
+    user_repo = di_container.user_repository
     user_repo.save(user_data)
 
 

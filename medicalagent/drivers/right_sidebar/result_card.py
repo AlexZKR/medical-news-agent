@@ -1,7 +1,7 @@
 import streamlit as st
 
 from medicalagent.domain.dialog import Finding
-from medicalagent.drivers.di import di
+from medicalagent.drivers.di import di_container
 
 # Card Layout Constants
 CARD_TITLE_RATIO = 0.85
@@ -101,7 +101,7 @@ def render_card_actions(item):
             use_container_width=True,
             help=HELP_DELETE,
         ):
-            di.findings_repository.delete(item.id)
+            di_container.findings_repository.delete(item.id)
             st.rerun()
 
     with col_relevance:
@@ -113,7 +113,7 @@ def render_card_actions(item):
                 use_container_width=True,
                 help="Mark this finding as relevant again",
             ):
-                di.findings_repository.mark_relevant(item.id)
+                di_container.findings_repository.mark_relevant(item.id)
                 st.rerun()
         # Show button to mark as non-relevant
         elif st.button(
@@ -122,7 +122,7 @@ def render_card_actions(item):
             use_container_width=True,
             help=HELP_NON_RELEVANT,
         ):
-            di.findings_repository.mark_non_relevant(item.id)
+            di_container.findings_repository.mark_non_relevant(item.id)
             st.rerun()
 
 

@@ -1,6 +1,6 @@
 import streamlit as st
 
-from medicalagent.drivers.di import di
+from medicalagent.drivers.di import di_container
 
 from .result_list import render_result_list
 
@@ -16,7 +16,9 @@ def render_right_sidebar():
     active_dialog_id = st.session_state.get("active_dialog_id")
 
     if active_dialog_id:
-        current_findings = di.findings_repository.get_by_dialog_id(active_dialog_id)
+        current_findings = di_container.findings_repository.get_by_dialog_id(
+            active_dialog_id
+        )
     else:
         current_findings = []
 

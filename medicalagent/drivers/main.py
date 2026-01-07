@@ -1,5 +1,6 @@
 import streamlit as st
 
+from medicalagent.config.env_load import load_secrets_into_env
 from medicalagent.drivers.central_chat.component import render_central_chat
 from medicalagent.drivers.left_sidebar.component import render_left_sidebar
 from medicalagent.drivers.right_sidebar.component import render_right_sidebar
@@ -56,4 +57,5 @@ def main():
 
 
 if __name__ == "__main__":
+    load_secrets_into_env()
     main()

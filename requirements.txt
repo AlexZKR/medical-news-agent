@@ -1,5 +1,6 @@
 streamlit[auth]
 langchain
+langchain-groq
 pydantic
 pydantic-settings
 Authlib
