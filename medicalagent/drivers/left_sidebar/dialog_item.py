@@ -8,19 +8,14 @@ def handle_title_click(dialog):
     """Handles title button click logic."""
     st.session_state.active_dialog_id = dialog.id
 
-    # Load dialog-specific chat history
-    # For now, use mock dialog data or create defaults
     active_dialog = di.dialog_repository.get_by_id(dialog.id)
     if active_dialog:
         st.session_state.chat_history = active_dialog.chat_history
     else:
-        # Fallback for newly created dialogs
-        # Try to get from repository, otherwise create default
         repo_dialog = di.dialog_repository.get_by_id(dialog.id)
         if repo_dialog:
             st.session_state.chat_history = repo_dialog.chat_history
         else:
-            # Create a basic dialog with default chat history
             default_dialog = Dialog(id=dialog.id, title=dialog.title, chat_history=[])
             st.session_state.chat_history = default_dialog.chat_history
 
