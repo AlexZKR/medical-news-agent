@@ -6,5 +6,12 @@ pydantic-settings
 structlog
 rich
 
--r requirements-dev.txt
+ruff
+bandit
+mypy
+pytest
+pytest-cov
+pytest-asyncio
+pre-commit
+
 -e .
