@@ -2,7 +2,7 @@ streamlit[auth]
 langchain
 pydantic
 pydantic-settings
-
+Authlib
 structlog
 rich
 
