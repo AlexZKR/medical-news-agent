@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "medical-news-agent"
+name = "medicalagent"
 authors = [{ name = "Alex Zakrevsky", email = "zakrevskyalex1323@gmail.com" }]
 description = "Medical News Agent that allows to discover and verify high-impact medical news."
 readme = "README.md"
@@ -18,6 +18,8 @@ optional-dependencies.dev = { file = ["requirements-dev.txt"] }
 [tool.setuptools_scm]
 # can be empty if no extra settings are needed, presence enables setuptools-scm
 
+[tool.setuptools]
+packages = ["medicalagent"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -29,8 +31,8 @@ pythonpath = "mdeicalagent/tests"
 
 [tool.coverage.run]
 concurrency = ["thread"]
-omit = ["mdeicalagent/tests/*", "*/__init__.py", "*/config/*", "*/ports/*"]
-source = ["mdeicalagent"]
+omit = ["medicalagent/tests/*", "*/__init__.py", "*/config/*", "*/ports/*"]
+source = ["medicalagent"]
 branch = true
 
 [tool.coverage.report]
@@ -54,7 +56,7 @@ lint.extend-select = ["I"]
 exclude = ["migrations", "notebooks"]
 fix = true
 target-version = "py313"
-src = ["mdeicalagent", "tests"]
+src = ["medicalagent", "tests"]
 
 [tool.bandit]
 exclude_dirs = ["venv", "tests"]

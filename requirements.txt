@@ -3,4 +3,8 @@ langchain
 pydantic
 pydantic-settings
 
+structlog
+rich
+
 -r requirements-dev.txt
+-e .
