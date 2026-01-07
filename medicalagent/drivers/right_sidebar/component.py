@@ -1,62 +1,62 @@
+
 import streamlit as st
 
 
 def render_right_sidebar():
-    """Renders the togglable right sidebar with placeholder content."""
+    """Renders the research findings board in the right column."""
 
-    # Initialize toggle state
-    if "right_sidebar_visible" not in st.session_state:
-        st.session_state.right_sidebar_visible = False
-
-    # Toggle button (placed outside the sidebar)
-    col_toggle, col_spacer = st.columns([0.1, 0.9])
-    with col_toggle:
-        if st.button("📊", help="Toggle Analysis Panel"):
-            st.session_state.right_sidebar_visible = (
-                not st.session_state.right_sidebar_visible
-            )
+    # -- Toggle Button (To Hide Panel) --
+    # We place this at the top so user can close the panel
+    col_head, col_btn = st.columns([0.8, 0.2])
+    with col_head:
+        st.subheader("📋 Findings")
+    with col_btn:
+        if st.button("❌", help="Close Panel", key="close_right_panel"):
+            st.session_state.right_sidebar_visible = False
             st.rerun()
 
-    # Render sidebar only if visible
-    if st.session_state.right_sidebar_visible:
-        with st.sidebar:
-            st.header("📊 Analysis Panel")
-            st.info("Right sidebar placeholder - future analysis features")
+    # -- Content Area --
+    if (
+        "research_results" not in st.session_state
+        or not st.session_state.research_results
+    ):
+        st.info("No findings yet. Start a chat to search.")
+        st.caption("Results from your research will appear here.")
+        return
 
-            st.divider()
+    # Filter for active results (new first)
+    active_results = [
+        r
+        for r in reversed(st.session_state.research_results)
+        if r.get("status") != "dismissed"
+    ]
 
-            # Analysis tools placeholder
-            st.subheader("Tools")
-            if st.button("📈 Statistics", use_container_width=True):
-                st.info("Statistical analysis - coming soon")
+    # -- Render Cards --
+    for item in active_results:
+        # Using st.container with border to create a native card look
+        with st.container(border=True):
+            st.markdown(f"#### {item['title']}")
+            st.caption(f"Source: {item['source']}")
+            st.markdown(f"**Paper:** [{item['paper_title']}]({item['paper_link']})")
+            st.info(f"{item['relevance_reason']}")
 
-            if st.button("🔗 References", use_container_width=True):
-                st.info("Reference management - coming soon")
-
-            if st.button("💾 Export", use_container_width=True):
-                st.info("Export features - coming soon")
-
-            st.divider()
-
-            # Session info
-            st.subheader("Session Info")
-            if "research_results" in st.session_state:
-                new_count = len(
-                    [
-                        r
-                        for r in st.session_state.research_results
-                        if r["status"] == "new"
-                    ]
-                )
-                saved_count = len(
-                    [
-                        r
-                        for r in st.session_state.research_results
-                        if r["status"] == "kept"
-                    ]
-                )
-
-                st.metric("Active Findings", new_count)
-                st.metric("Saved Items", saved_count)
+            # Card Actions
+            if item.get("status") != "kept":
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button(
+                        "✅ Keep", key=f"keep_{item['id']}", use_container_width=True
+                    ):
+                        item["status"] = "kept"
+                        st.toast("Saved to collection!")
+                        st.rerun()
+                with c2:
+                    if st.button(
+                        "❌ Dismiss",
+                        key=f"dismiss_{item['id']}",
+                        use_container_width=True,
+                    ):
+                        item["status"] = "dismissed"
+                        st.rerun()
             else:
-                st.caption("No session data yet")
+                st.success("✅ Saved to Collection")

@@ -7,6 +7,14 @@ import streamlit as st
 def render_central_chat():
     """Renders the central chat interface with research capabilities."""
 
+    # -- Toggle Button (To Show Panel if Hidden) --
+    if not st.session_state.get("right_sidebar_visible", True):
+        if st.button("📋 Show Findings", key="open_right_panel"):
+            st.session_state.right_sidebar_visible = True
+            st.rerun()
+
+    st.subheader("💬 Research Discussion")
+
     # Initialize chat history if not exists
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
@@ -18,6 +26,7 @@ def render_central_chat():
 
     # Initialize research results if not exists
     if "research_results" not in st.session_state:
+        # Dummy data for initial view
         st.session_state.research_results = [
             {
                 "id": "init_1",
@@ -30,11 +39,6 @@ def render_central_chat():
                 "status": "new",
             }
         ]
-
-    st.title("🧬 Medical Research Agent")
-
-    # Chat Interface
-    st.subheader("💬 Discussion")
 
     # Display chat messages
     for message in st.session_state.chat_history:
@@ -69,5 +73,8 @@ def render_central_chat():
                 "relevance_reason": "Matches your interest in clinical outcomes.",
                 "status": "new",
             }
+            # Append to global state so Right Sidebar can see it
             st.session_state.research_results.append(new_finding)
+
+            # Force a rerun so the Right Sidebar updates immediately
             st.rerun()

@@ -21,6 +21,7 @@ if "init" not in st.session_state:
         "medicalnewstoday.com",
     ]
     st.session_state.settings = {"date_range": "Last Month", "strict_mode": True}
+    st.session_state.right_sidebar_visible = True
     st.session_state.init = True
 
 
@@ -28,14 +29,22 @@ if "init" not in st.session_state:
 def main():
     """Main application entry point."""
 
-    # Render left sidebar
+    # 1. Render Native Streamlit Sidebar (Left)
     render_left_sidebar()
 
-    # Render central chat interface
-    render_central_chat()
+    # 2. Define Layout Columns (Central vs Right)
+    if st.session_state.right_sidebar_visible:
+        # Split layout: 65% Chat, 35% Right Panel
+        col_chat, col_right = st.columns([2, 1.1], gap="medium")
 
-    # Render right sidebar (togglable)
-    render_right_sidebar()
+        with col_chat:
+            render_central_chat()
+
+        with col_right:
+            render_right_sidebar()
+    else:
+        # Full width Chat
+        render_central_chat()
 
 
 if __name__ == "__main__":
