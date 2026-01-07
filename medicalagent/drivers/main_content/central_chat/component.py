@@ -1,7 +1,12 @@
 import time
-import uuid
 
 import streamlit as st
+
+from ..mock_data import (
+    generate_mock_finding,
+    get_initial_chat_history,
+    get_initial_research_results,
+)
 
 
 def render_central_chat():
@@ -17,28 +22,11 @@ def render_central_chat():
 
     # Initialize chat history if not exists
     if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [
-            {
-                "role": "assistant",
-                "content": "Hello! I'm your Medical Research Agent. Try 'Find latest diabetes news'.",
-            }
-        ]
+        st.session_state.chat_history = get_initial_chat_history()
 
     # Initialize research results if not exists
     if "research_results" not in st.session_state:
-        # Dummy data for initial view
-        st.session_state.research_results = [
-            {
-                "id": "init_1",
-                "title": "Example: New GLP-1 Agonist Study",
-                "source": "StatNews",
-                "link": "#",
-                "paper_title": "Efficacy of Retatrutide",
-                "paper_link": "#",
-                "relevance_reason": "High impact study relevant to metabolic diseases.",
-                "status": "new",
-            }
-        ]
+        st.session_state.research_results = get_initial_research_results()
 
     # Display chat messages
     for message in st.session_state.chat_history:
@@ -63,16 +51,7 @@ def render_central_chat():
             st.session_state.chat_history.append({"role": "assistant", "content": resp})
 
             # Mock Finding - create new research result
-            new_finding = {
-                "id": str(uuid.uuid4()),
-                "title": f"New Finding for: {prompt}",
-                "source": "Medscape",
-                "link": "#",
-                "paper_title": "Clinical Trial Results Phase III",
-                "paper_link": "#",
-                "relevance_reason": "Matches your interest in clinical outcomes.",
-                "status": "new",
-            }
+            new_finding = generate_mock_finding(prompt)
             # Append to global state so Right Sidebar can see it
             st.session_state.research_results.append(new_finding)
 
