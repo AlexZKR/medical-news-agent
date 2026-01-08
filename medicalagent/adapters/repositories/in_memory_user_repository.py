@@ -26,9 +26,9 @@ class InMemoryUserRepository(UserRepository):
         self, email: str, name: str | None = None, picture: str | None = None
     ):
         """Create a new user with default data."""
-        last_id = -1
+        last_id = 0
         if self._users:
-            last_id = self._users[-1].id
+            last_id = max(self._users.keys())
 
         profile = UserProfile(email=email, name=name, picture=picture)
         user_data = UserData(profile=profile, id=last_id + 1)

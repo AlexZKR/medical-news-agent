@@ -49,7 +49,7 @@ def handle_chat_input():
         user = get_current_user()
 
         # --- SCENARIO 1: Create New Dialog ---
-        if not active_dialog_id:
+        if active_dialog_id is None:
             conversation_title = generate_conversation_title(prompt)
 
             new_dialog = di_container.dialog_repository.create(
