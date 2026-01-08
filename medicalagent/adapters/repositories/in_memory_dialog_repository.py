@@ -1,11 +1,24 @@
 """In-memory implementation of DialogRepository."""
 
+from langchain_core.messages import ChatMessage
+
 from medicalagent.domain.dialog import Dialog
 from medicalagent.ports.dialog_repository import DialogRepository
 
 
 class InMemoryDialogRepository(DialogRepository):
     """In-memory implementation of DialogRepository using mock data."""
+
+    def __init__(self) -> None:
+        self._dialogs: list[Dialog] = []
+
+    def create(self, title: str, messages: list[ChatMessage]) -> Dialog:
+        last_id = -1
+        if self._dialogs:
+            last_id = self._dialogs[-1].id
+        d = Dialog(id=last_id + 1)
+        self._dialogs.append(d)
+        return d
 
     def get_all(self) -> list[Dialog]:
         """Get all dialogs."""

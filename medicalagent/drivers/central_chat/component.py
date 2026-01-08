@@ -1,5 +1,8 @@
 import streamlit as st
 
+from medicalagent.adapters.agent.dialog_title_generator import (
+    generate_conversation_title,
+)
 from medicalagent.drivers.di import di_container
 from medicalagent.drivers.st_state import ChatMessage, session_state
 from medicalagent.drivers.user_service import get_current_user
@@ -26,7 +29,7 @@ def handle_chat_input():
         with st.chat_message("user"):
             user_msg = st.empty()
             user_msg.markdown(prompt)
-            session_state.add_chat_message("user", prompt)
+            user_msg = session_state.add_chat_message("user", prompt)
 
         with st.chat_message("assistant"):
             msg_ph = st.empty()
@@ -35,7 +38,15 @@ def handle_chat_input():
             response_text = response[0].content
             msg_ph.markdown(response_text, text_alignment="justify")
 
-            session_state.add_chat_message("assistant", response_text)
+            ai_response = session_state.add_chat_message("assistant", response_text)
+
+        if not session_state.active_dialog_id:
+            converstation_title = generate_conversation_title(prompt)
+            new_dialog = di_container.dialog_repository.create(
+                converstation_title, [user_msg, ai_response]
+            )
+            session_state.set_active_dialog(new_dialog)
+            st.rerun()
 
 
 def render_central_chat():
@@ -45,7 +56,7 @@ def render_central_chat():
     active_dialog = None
     active_dialog_chat_hist: list[ChatMessage] = []
 
-    if user and active_dialog_id:
+    if user and active_dialog_id is not None:
         active_dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
         if active_dialog:
             active_dialog_chat_hist = active_dialog.chat_history
