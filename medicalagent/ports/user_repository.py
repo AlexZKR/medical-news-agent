@@ -34,6 +34,6 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    def create_default_user(self, email: str, name: str | None = None):
+    def create_user(self, email: str, name: str | None = None):
         """Create a new user with default data."""
         pass

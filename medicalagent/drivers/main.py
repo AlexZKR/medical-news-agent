@@ -4,7 +4,7 @@ from medicalagent.config.env_load import load_secrets_into_env
 from medicalagent.drivers.central_chat.component import render_central_chat
 from medicalagent.drivers.left_sidebar.component import render_left_sidebar
 from medicalagent.drivers.right_sidebar.component import render_right_sidebar
-from medicalagent.drivers.st_state import init_state
+from medicalagent.drivers.st_state import session_state
 
 st.set_page_config(
     page_title="Medical News Agent",
@@ -40,11 +40,13 @@ def render_auth_ui():
 
 def main():
     """Main application entry point."""
-    if not st.user.is_logged_in:
+    if not st.user:
         render_auth_ui()
         return
 
-    init_state()
+    # Session state is initialized automatically when session_state is accessed
+    # Force initialization by accessing it
+    _ = session_state.is_initialized
 
     render_left_sidebar()
     col_chat, col_right = st.columns([2, 1.1], gap="medium")

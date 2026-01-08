@@ -60,3 +60,4 @@ exclude_dirs = ["venv", "tests"]
 
 [tool.mypy]
 exclude = '(?x)^(venv|\.venv|build|dist|\.mypy_cache)/'
+plugins = ['pydantic.mypy']

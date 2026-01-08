@@ -1,6 +1,7 @@
 import streamlit as st
 
 from medicalagent.domain.dialog import Dialog
+from medicalagent.drivers.st_state import session_state
 from medicalagent.drivers.user_service import get_current_user, save_current_user
 
 from .dialog_list import render_dialog_list
@@ -14,7 +15,6 @@ def render_sidebar_header():
 
     with col_new:
         if st.button("", help="Start new dialog", icon="➕"):
-            # Create new dialog for current user
             user = get_current_user()
             if user:
                 # Generate next ID from user's existing dialogs
@@ -25,14 +25,12 @@ def render_sidebar_header():
                 user.add_dialog(new_dialog)
                 save_current_user(user)
 
-                st.session_state.active_dialog_id = new_dialog.id
-                st.session_state.chat_history = new_dialog.chat_history
+                session_state.set_active_dialog(new_dialog.id, new_dialog.chat_history)
             st.rerun()
 
 
 def render_sidebar_footer():
     """Render sidebar footer with user info and logout."""
-    st.divider()
 
     if st.user:
         with st.container():
@@ -49,7 +47,6 @@ def render_sidebar_footer():
             else:
                 st.markdown(f"👤 **{user_name}**")
 
-            st.markdown("---")
             if st.button("🚪 Logout", use_container_width=True):
                 st.logout()
 

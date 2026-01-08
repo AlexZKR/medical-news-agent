@@ -7,19 +7,6 @@ from medicalagent.ports.dialog_repository import DialogRepository
 class InMemoryDialogRepository(DialogRepository):
     """In-memory implementation of DialogRepository using mock data."""
 
-    def __init__(self):
-        """Initialize the repository."""
-        self._dialogs = self._get_mock_dialogs()
-
-    def _get_mock_dialogs(self) -> list[Dialog]:
-        """Returns mock dialog data."""
-        return [
-            Dialog(id=1, title="Diabetes Research"),
-            Dialog(id=2, title="Cancer Biomarkers"),
-            Dialog(id=3, title="AI in Medical Diagnosis"),
-            Dialog(id=4, title="COVID-19 Variants"),
-        ]
-
     def get_all(self) -> list[Dialog]:
         """Get all dialogs."""
         return self._dialogs.copy()

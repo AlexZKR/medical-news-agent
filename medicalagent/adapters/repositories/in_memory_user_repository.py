@@ -1,6 +1,5 @@
 """In-memory implementation of UserRepository."""
 
-from medicalagent.domain.dialog import Dialog
 from medicalagent.domain.user import UserData, UserProfile
 
 
@@ -32,19 +31,10 @@ class InMemoryUserRepository:
         """Get all user emails."""
         return list(self._users.keys())
 
-    def create_default_user(self, email: str, name: str | None = None):
+    def create_user(self, email: str, name: str | None = None):
         """Create a new user with default data."""
         profile = UserProfile(email=email, name=name)
-
-        # Create default dialogs for new users
-        default_dialogs = [
-            Dialog(id=1, title="Diabetes Research"),
-            Dialog(id=2, title="Cancer Biomarkers"),
-            Dialog(id=3, title="AI in Medical Diagnosis"),
-            Dialog(id=4, title="COVID-19 Variants"),
-        ]
-
-        user_data = UserData(profile=profile, dialogs=default_dialogs)
+        user_data = UserData(profile=profile)
 
         self.save(user_data)
         return user_data

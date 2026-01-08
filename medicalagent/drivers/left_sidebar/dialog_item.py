@@ -1,21 +1,21 @@
 import streamlit as st
 
+from medicalagent.drivers.st_state import session_state
 from medicalagent.drivers.user_service import get_current_user, save_current_user
 
 
 def handle_title_click(dialog):
     """Handles title button click logic."""
-    st.session_state.active_dialog_id = dialog.id
-
     # Load dialog-specific chat history from user data
     user = get_current_user()
     if user:
         user_dialog = next((d for d in user.get_dialogs() if d.id == dialog.id), None)
         if user_dialog:
-            st.session_state.chat_history = user_dialog.chat_history
+            session_state.set_active_dialog(dialog.id, user_dialog.chat_history)
         else:
             # Fallback for dialogs not found in user data
-            st.session_state.chat_history = []
+            session_state.active_dialog_id = dialog.id
+            session_state.clear_chat_history()
 
     st.rerun()
 
@@ -28,17 +28,17 @@ def handle_delete_click(dialog):
         user.remove_dialog(dialog.id)
 
         # If this was the active dialog, switch to another dialog or clear
-        if st.session_state.active_dialog_id == dialog.id:
+        if session_state.active_dialog_id == dialog.id:
             remaining_dialogs = user.get_dialogs()
             if remaining_dialogs:
                 # Switch to the first remaining dialog
                 new_active_dialog = remaining_dialogs[0]
-                st.session_state.active_dialog_id = new_active_dialog.id
-                st.session_state.chat_history = new_active_dialog.chat_history
+                session_state.set_active_dialog(
+                    new_active_dialog.id, new_active_dialog.chat_history
+                )
             else:
                 # No dialogs left
-                st.session_state.active_dialog_id = None
-                st.session_state.chat_history = []
+                session_state.reset_session()
 
         # Save updated user data
         save_current_user(user)
