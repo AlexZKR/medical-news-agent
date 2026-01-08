@@ -1,9 +1,10 @@
 """In-memory implementation of UserRepository."""
 
 from medicalagent.domain.user import UserData, UserProfile
+from medicalagent.ports import UserRepository
 
 
-class InMemoryUserRepository:
+class InMemoryUserRepository(UserRepository):
     """In-memory implementation of UserRepository using mock data."""
 
     def __init__(self):

@@ -10,6 +10,13 @@ class Link(BaseModel):
     url: str
 
 
+class ChatMessage(BaseModel):
+    """Type definition for chat message in session state."""
+
+    role: str
+    content: str
+
+
 class Finding(BaseModel):
     """Finding domain model."""
 
@@ -34,11 +41,11 @@ class Dialog(BaseModel):
 
     id: int
     title: str = Field("New dialog")
-    chat_history: list[dict] = Field(
+    chat_history: list[ChatMessage] = Field(
         default_factory=lambda: [
-            {
-                "role": "assistant",
-                "content": "Hello! I'm your Medical Research Agent. What would you like to research today?",
-            }
+            ChatMessage(
+                role="assistant",
+                content="Hello! I'm your Medical Research Agent. What would you like to research today?",
+            ),
         ]
     )

@@ -14,6 +14,6 @@ class AgentService(ABC):
             prompt: The user's query or prompt
 
         Returns:
-            The agent's response as a string
+            The agent's response as a list of AIMessages
         """
         pass

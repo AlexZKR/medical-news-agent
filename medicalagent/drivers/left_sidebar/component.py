@@ -41,7 +41,7 @@ def render_sidebar_footer():
             if user_picture:
                 col_img, col_info = st.columns([0.3, 0.7])
                 with col_img:
-                    st.image(user_picture, width=50)
+                    st.image(user_picture, width=50)  # type: ignore
                 with col_info:
                     st.markdown(f"**{user_name}**")
             else:

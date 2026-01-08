@@ -16,8 +16,8 @@ def render_chat_header(active_dialog):
 def render_chat_messages(chat_history: list[ChatMessage]):
     """Renders all chat messages in the conversation."""
     for message in chat_history:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        with st.chat_message(message.role):
+            st.markdown(message.content)
 
 
 def handle_chat_input():
@@ -32,7 +32,7 @@ def handle_chat_input():
             msg_ph = st.empty()
             msg_ph.markdown("🔍 *Generating response...*")
             response = di_container.agent_service.call_agent(prompt)
-            response_text = response["messages"][0].content
+            response_text = response[0].content
             msg_ph.markdown(response_text, text_alignment="justify")
 
             session_state.add_chat_message("assistant", response_text)
@@ -43,12 +43,12 @@ def render_central_chat():
     user = get_current_user()
     active_dialog_id = session_state.active_dialog_id
     active_dialog = None
-    active_dialog_chat_hist = []
+    active_dialog_chat_hist: list[ChatMessage] = []
 
     if user and active_dialog_id:
         active_dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
-        active_dialog_chat_hist = active_dialog.chat_history
-        session_state.set_active_dialog(active_dialog)
+        if active_dialog:
+            active_dialog_chat_hist = active_dialog.chat_history
 
     render_chat_header(active_dialog)
     render_chat_messages(active_dialog_chat_hist)

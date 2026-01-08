@@ -1,16 +1,7 @@
-from typing import TypedDict
-
 import streamlit as st
 
-from ..domain.dialog import Dialog
+from ..domain.dialog import ChatMessage, Dialog
 from .user_service import get_current_user
-
-
-class ChatMessage(TypedDict):
-    """Type definition for chat message in session state."""
-
-    role: str
-    content: str
 
 
 class SessionStateManager:
@@ -41,46 +32,45 @@ class SessionStateManager:
                 self.active_dialog_id = None
                 self.chat_history = []
 
-    # Getters
+    # Getters and setters
     @property
     def dialogs(self) -> list[Dialog]:
         """Get the list of dialogs."""
         return st.session_state.get("dialogs", [])
+
+    @dialogs.setter
+    def dialogs(self, value: list[Dialog]) -> None:
+        """Set the list of dialogs."""
+        st.session_state.dialogs = value
 
     @property
     def active_dialog_id(self) -> int | None:
         """Get the active dialog ID."""
         return st.session_state.get("active_dialog_id")
 
-    @property
-    def chat_history(self) -> list[ChatMessage]:
-        """Get the chat history."""
-        return st.session_state.get("chat_history", [])
-
-    @property
-    def is_initialized(self) -> bool:
-        """Check if session state is initialized."""
-        return st.session_state.get("init", False)
-
-    # Setters
-    @dialogs.setter
-    def dialogs(self, value: list[Dialog]) -> None:
-        """Set the list of dialogs."""
-        st.session_state.dialogs = value
-
     @active_dialog_id.setter
     def active_dialog_id(self, value: int | None) -> None:
         """Set the active dialog ID."""
         st.session_state.active_dialog_id = value
+
+    @property
+    def chat_history(self) -> list[ChatMessage]:
+        """Get the chat history."""
+        return st.session_state.get("chat_history", [])
 
     @chat_history.setter
     def chat_history(self, value: list[ChatMessage]) -> None:
         """Set the chat history."""
         st.session_state.chat_history = value
 
-    def add_chat_message(self, role: str, content: str) -> None:
+    @property
+    def is_initialized(self) -> bool:
+        """Check if session state is initialized."""
+        return st.session_state.get("init", False)
+
+    def add_chat_message(self, role: str, content: str | list[str | dict]) -> None:
         """Add a message to the chat history."""
-        new_message: ChatMessage = {"role": role, "content": content}
+        new_message = ChatMessage(role=role, content=content)
         current_history = self.chat_history
         current_history.append(new_message)
         self.chat_history = current_history

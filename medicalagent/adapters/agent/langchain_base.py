@@ -18,7 +18,7 @@ class LangChainAgentService(AgentService):
     def _create_agent(self) -> CompiledStateGraph:
         """Create and configure the LangChain agent."""
         chat_model = ChatGroq(
-            model="qwen/qwen3-32b",
+            model_name="qwen/qwen3-32b",
             temperature=0,
             max_tokens=None,
             reasoning_format="hidden",
@@ -36,11 +36,12 @@ class LangChainAgentService(AgentService):
         """Call the agent with a prompt and return the cleaned response."""
         try:
             message = HumanMessage(prompt)
-            result: AIMessage = self._agent.invoke(message)
-            return result
+            result = self._agent.invoke(message)
+            messages = [msg for msg in result["messages"]]
+            return messages
 
         except Exception as e:
             error_message = (
                 f"Sorry, I encountered an error while researching your query: {str(e)}"
             )
-            return AIMessage(content=error_message)
+            return [AIMessage(content=error_message)]
