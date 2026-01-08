@@ -40,12 +40,26 @@ def handle_chat_input():
 
             ai_response = session_state.add_chat_message("assistant", response_text)
 
+        # No dialog exists
         if not session_state.active_dialog_id:
-            converstation_title = generate_conversation_title(prompt)
+            conversation_title = generate_conversation_title(prompt)
             new_dialog = di_container.dialog_repository.create(
-                converstation_title, [user_msg, ai_response]
+                conversation_title, [user_msg, ai_response]
             )
             session_state.set_active_dialog(new_dialog)
+            st.rerun()
+
+        # Existing "New dialog" that needs a real name
+        else:
+            dialog = di_container.dialog_repository.get_by_id(
+                session_state.active_dialog_id
+            )
+
+            # Check if it still has the default title
+            if dialog and dialog.title == "New dialog":
+                new_title = generate_conversation_title(prompt)
+                dialog.title = new_title
+                di_container.dialog_repository.save(dialog)
             st.rerun()
 
 

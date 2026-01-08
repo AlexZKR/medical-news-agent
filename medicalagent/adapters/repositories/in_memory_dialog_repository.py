@@ -16,7 +16,7 @@ class InMemoryDialogRepository(DialogRepository):
         last_id = -1
         if self._dialogs:
             last_id = self._dialogs[-1].id
-        d = Dialog(id=last_id + 1)
+        d = Dialog(id=last_id + 1, title=title, messages=messages)
         self._dialogs.append(d)
         return d
 
