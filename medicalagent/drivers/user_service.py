@@ -18,23 +18,31 @@ def get_current_user_email() -> str | None:
     return None
 
 
-def get_current_user() -> UserData | None:
+def create_user() -> UserData:
+    """Creates a new user with verified types for MyPy."""
+    email = str(st.user.email) if st.user.email else ""
+    name = str(st.user.name) if isinstance(st.user.name, str) else None
+    picture_val = st.user.get("picture")
+    picture = str(picture_val) if isinstance(picture_val, str) else None
+
+    return di_container.user_repository.create_user(
+        email,
+        name,
+        picture,
+    )
+
+
+def get_current_user() -> UserData:
     """Get the current user's data, creating it if it doesn't exist."""
     email = get_current_user_email()
     if not email:
-        return None
+        raise ValueError("User not found, email is None")
 
     user_repo = di_container.user_repository
     user_data = user_repo.get_by_email(email)
 
     if not user_data:
-        # Create new user with default data
-        user_data = user_repo.create_user(email)
+        st.logout()
+        return  # type: ignore
 
     return user_data
-
-
-def save_current_user(user_data: UserData) -> None:
-    """Save the current user's data."""
-    user_repo = di_container.user_repository
-    user_repo.save(user_data)

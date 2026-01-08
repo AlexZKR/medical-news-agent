@@ -19,21 +19,8 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, email: str) -> None:
-        """Delete user data by email."""
-        pass
-
-    @abstractmethod
-    def exists(self, email: str) -> bool:
-        """Check if user exists."""
-        pass
-
-    @abstractmethod
-    def get_all_users(self) -> list[str]:
-        """Get all user emails (for admin purposes)."""
-        pass
-
-    @abstractmethod
-    def create_user(self, email: str, name: str | None = None):
+    def create_user(
+        self, email: str, name: str | None = None, picture: str | None = None
+    ) -> UserData:
         """Create a new user with default data."""
         pass

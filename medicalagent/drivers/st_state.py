@@ -1,6 +1,8 @@
 import streamlit as st
 
-from ..domain.dialog import ChatMessage, Dialog
+from medicalagent.drivers.di import di_container
+
+from ..domain.dialog import Dialog
 from .user_service import get_current_user
 
 
@@ -21,7 +23,7 @@ class SessionStateManager:
         """Initialize user-specific session data."""
         user = get_current_user()
         if user:
-            dialogs = user.get_dialogs()
+            dialogs = di_container.dialog_repository.get_by_user_id(user.id)
             if dialogs:
                 first_dialog = dialogs[0]
                 self.active_dialog_id = first_dialog.id
@@ -41,33 +43,14 @@ class SessionStateManager:
         st.session_state.active_dialog_id = value
 
     @property
-    def chat_history(self) -> list[ChatMessage]:
-        """Get the chat history."""
-        return st.session_state.get("chat_history", [])
-
-    @chat_history.setter
-    def chat_history(self, value: list[ChatMessage]) -> None:
-        """Set the chat history."""
-        st.session_state.chat_history = value
-
-    @property
     def is_initialized(self) -> bool:
         """Check if session state is initialized."""
         return st.session_state.get("init", False)
 
-    def add_chat_message(
-        self, role: str, content: str | list[str | dict]
-    ) -> ChatMessage:
-        """Add a message to the chat history."""
-        new_message = ChatMessage(role=role, content=content)
-        current_history = self.chat_history
-        current_history.append(new_message)
-        self.chat_history = current_history
-        return new_message
-
-    def clear_chat_history(self) -> None:
+    def reset_dialog_state(self) -> None:
         """Clear the chat history."""
         self.chat_history = []
+        self.active_dialog_id = None
 
     def set_active_dialog(self, d: Dialog) -> None:
         """Set the active dialog and its chat history."""

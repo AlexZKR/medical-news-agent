@@ -1,3 +1,5 @@
+from typing import cast
+
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
@@ -19,7 +21,7 @@ def generate_conversation_title(first_user_message: str) -> str:
     """
 
     llm = ChatGroq(
-        model="llama-3.1-8b-instant",
+        model_name="llama-3.1-8b-instant",
         groq_api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
         temperature=0.3,
         max_tokens=25,
@@ -38,7 +40,7 @@ def generate_conversation_title(first_user_message: str) -> str:
     ]
 
     try:
-        response = llm.invoke(messages)
+        response = cast(ConversationTitle, llm.invoke(messages))
         return response.title
     except Exception as e:
         print(f"Failed to generate conversation title {e}")

@@ -21,8 +21,9 @@ class LangChainAgentService(AgentService):
             model_name="qwen/qwen3-32b",
             temperature=0,
             max_tokens=None,
-            reasoning_format="hidden",
+            # reasoning_format="hidden",
             timeout=None,
+            include_reasoning=False,
             max_retries=2,
             api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
         )

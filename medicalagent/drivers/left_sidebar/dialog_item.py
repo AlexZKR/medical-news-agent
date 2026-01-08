@@ -1,52 +1,35 @@
 import streamlit as st
 
+from medicalagent.domain.dialog import Dialog
+from medicalagent.drivers.di import di_container
 from medicalagent.drivers.st_state import session_state
-from medicalagent.drivers.user_service import get_current_user, save_current_user
+from medicalagent.drivers.user_service import get_current_user
 
 
-def handle_title_click(dialog):
+def handle_title_click(dialog: Dialog):
     """Handles title button click logic."""
-    # Load dialog-specific chat history from user data
     user = get_current_user()
     if user:
-        user_dialog = next((d for d in user.get_dialogs() if d.id == dialog.id), None)
+        user_dialog = di_container.dialog_repository.get_by_id(dialog.id)
         if user_dialog:
-            session_state.set_active_dialog(dialog.id, user_dialog.chat_history)
+            session_state.set_active_dialog(user_dialog)
         else:
-            # Fallback for dialogs not found in user data
-            session_state.active_dialog_id = dialog.id
-            session_state.clear_chat_history()
-
+            session_state.active_dialog_id = None
+            session_state.reset_dialog_state()
     st.rerun()
 
 
-def handle_delete_click(dialog):
+def handle_delete_click(dialog: Dialog):
     """Handles delete button click logic."""
-    # Delete the dialog from user data
+
     user = get_current_user()
     if user:
-        user.remove_dialog(dialog.id)
-
-        # If this was the active dialog, switch to another dialog or clear
-        if session_state.active_dialog_id == dialog.id:
-            remaining_dialogs = user.get_dialogs()
-            if remaining_dialogs:
-                # Switch to the first remaining dialog
-                new_active_dialog = remaining_dialogs[0]
-                session_state.set_active_dialog(
-                    new_active_dialog.id, new_active_dialog.chat_history
-                )
-            else:
-                # No dialogs left
-                session_state.reset_session()
-
-        # Save updated user data
-        save_current_user(user)
-
+        di_container.dialog_repository.delete(dialog.id)
+        session_state.reset_dialog_state()
     st.rerun()
 
 
-def render_title_button(dialog, is_selected):
+def render_title_button(dialog: Dialog, is_selected: bool):
     """Renders the title button and handles clicks."""
     title_clicked = st.button(
         dialog.title,
@@ -59,7 +42,7 @@ def render_title_button(dialog, is_selected):
         handle_title_click(dialog)
 
 
-def render_delete_button(dialog):
+def render_delete_button(dialog: Dialog):
     """Renders the delete button and handles clicks."""
     delete_clicked = st.button(
         "",
@@ -72,7 +55,7 @@ def render_delete_button(dialog):
         handle_delete_click(dialog)
 
 
-def render_dialog_item(dialog, is_selected=False):
+def render_dialog_item(dialog: Dialog, is_selected: bool = False):
     """Renders a single dialog item with Streamlit buttons."""
     col_title, col_delete = st.columns([0.8, 0.2])
 

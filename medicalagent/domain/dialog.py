@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, Field
 
+DEFAULT_DIALOG_TITLE = "New Dialog"
+
 
 class Link(BaseModel):
     """Link domain model."""
@@ -40,7 +42,8 @@ class Dialog(BaseModel):
     """Dialog domain model."""
 
     id: int
-    title: str = Field("New dialog")
+    user_id: int
+    title: str = Field(DEFAULT_DIALOG_TITLE)
     chat_history: list[ChatMessage] = Field(
         default_factory=lambda: [
             ChatMessage(

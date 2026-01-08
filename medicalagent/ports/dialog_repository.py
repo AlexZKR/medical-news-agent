@@ -2,22 +2,27 @@
 
 from abc import ABC, abstractmethod
 
-from langchain_core.messages import ChatMessage
-
-from medicalagent.domain.dialog import Dialog
+from medicalagent.domain.dialog import ChatMessage, Dialog
 
 
 class DialogRepository(ABC):
     """Abstract repository for Dialog operations."""
 
     @abstractmethod
-    def create(self, title: str, messages: list[ChatMessage]) -> Dialog:
+    def create(
+        self, messages: list[ChatMessage], user_id: int, title: str | None = None
+    ) -> Dialog:
         """Create new empty dialog"""
         pass
 
     @abstractmethod
     def get_all(self) -> list[Dialog]:
         """Get all dialogs."""
+        pass
+
+    @abstractmethod
+    def get_by_user_id(self, user_id: int) -> list[Dialog]:
+        """Get dialogs for user"""
         pass
 
     @abstractmethod
