@@ -26,8 +26,8 @@ class DIContainer:
         self._dialog_repository = InMemoryDialogRepository()
         self._findings_repository = InMemoryFindingsRepository()
         self._user_repository = InMemoryUserRepository()
-        self._agent_service = LangChainAgentService()
         self._http_transport = RequestsHTTPTransport()
+        self._agent_service = LangChainAgentService(container=self)
 
     @property
     def dialog_repository(self) -> DialogRepository:

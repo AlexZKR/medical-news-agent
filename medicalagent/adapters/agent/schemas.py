@@ -1,11 +1,8 @@
-from typing import TYPE_CHECKING
+from typing import Any
 
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from medicalagent.drivers.di import DIContainer
-
 
 class AgentContext(BaseModel):
-    container: DIContainer
+    container: Any
     dialog_id: int

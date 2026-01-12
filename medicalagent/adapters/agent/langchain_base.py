@@ -1,5 +1,4 @@
 from logging import getLogger
-from typing import TYPE_CHECKING
 
 from langchain.agents import create_agent
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -23,15 +22,13 @@ from medicalagent.config import settings
 from medicalagent.domain.dialog import ChatMessage
 from medicalagent.ports.agent import AgentService
 
-if TYPE_CHECKING:
-    from medicalagent.drivers.di import DIContainer
 logger = getLogger(__name__)
 
 
 class LangChainAgentService(AgentService):
     """LangChain-based implementation of the AgentService."""
 
-    def __init__(self, container: "DIContainer"):
+    def __init__(self, container):
         """Initialize the agent service with the LangChain agent."""
         self._agent = self._create_agent()
         self._container = container
