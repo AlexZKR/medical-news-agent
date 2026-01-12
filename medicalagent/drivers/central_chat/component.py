@@ -28,60 +28,66 @@ def handle_chat_input():
     """Handles user chat input and generates responses."""
 
     if prompt := st.chat_input("Submit a request", max_chars=1500):
+        # 1. Immediate UI Feedback
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        chat_history = []
-        if session_state.active_dialog_id is not None:
-            chat_history = di_container.dialog_repository.get_chat_history_by_id(
-                session_state.active_dialog_id
-            )
+        user = get_current_user()
+        active_dialog_id = session_state.active_dialog_id
 
+        # --- CRITICAL FIX: PRE-CREATION ---
+        # If this is a new chat, we must create the dialog container FIRST.
+        # This ensures 'active_dialog_id' is populated when the Agent tries to use tools.
+        if active_dialog_id is None:
+            new_dialog = di_container.dialog_repository.create(
+                title=DEFAULT_DIALOG_TITLE,
+                messages=[],  # Start empty
+                user_id=user.id,
+            )
+            # Set the ID in session_state immediately so the Tool can see it
+            session_state.set_active_dialog(new_dialog)
+            active_dialog_id = new_dialog.id
+
+        # 2. Get Context (Now guaranteed to exist)
+        dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
+        chat_history = dialog.chat_history
+
+        # 3. Call Agent
         with st.chat_message("assistant"):
             msg_ph = st.empty()
             msg_ph.markdown("🔍 *Generating response...*")
 
-            response = di_container.agent_service.call_agent(
-                prompt, chat_history=chat_history
-            )
-            response_text = (
-                response[0].content if isinstance(response, list) else response.content
-            )
+            try:
+                response = di_container.agent_service.call_agent(
+                    prompt, chat_history=chat_history
+                )
+                response_text = (
+                    response[0].content
+                    if isinstance(response, list)
+                    else response.content
+                )
+                msg_ph.markdown(response_text, text_alignment="justify")
 
-            msg_ph.markdown(response_text, text_alignment="justify")
+            except Exception as e:
+                msg_ph.error(f"Agent Error: {str(e)}")
+                return
 
+        # 4. Save Interaction
         user_msg = ChatMessage(role="user", content=prompt)
         ai_msg = ChatMessage(role="assistant", content=response_text)
 
-        active_dialog_id = session_state.active_dialog_id
-        user = get_current_user()
+        dialog.chat_history.extend([user_msg, ai_msg])
 
-        # --- SCENARIO 1: Create New Dialog ---
-        if active_dialog_id is None:
-            conversation_title = generate_conversation_title(prompt)
+        # 5. Smart Renaming (Lazy)
+        # If the title is still the default (meaning we just created it),
+        # generate a real title based on the user's prompt.
+        if dialog.title == DEFAULT_DIALOG_TITLE:
+            new_title = generate_conversation_title(prompt)
+            dialog.title = new_title
 
-            new_dialog = di_container.dialog_repository.create(
-                title=conversation_title, messages=[user_msg, ai_msg], user_id=user.id
-            )
-            session_state.set_active_dialog(new_dialog)
-            st.rerun()
-
-        # --- SCENARIO 2 & 3: Update Existing Dialog ---
-        else:
-            dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
-
-            if dialog:
-                dialog.chat_history.extend([user_msg, ai_msg])
-
-                # Check for Rename (Scenario 2: Dialog exists but has default name)
-                if dialog.title == DEFAULT_DIALOG_TITLE:
-                    new_title = generate_conversation_title(prompt)
-                    dialog.title = new_title
-
-                # Save changes
-                session_state.set_active_dialog(dialog)
-                di_container.dialog_repository.save(dialog)
-                st.rerun()
+        # 6. Persist & Refresh
+        di_container.dialog_repository.save(dialog)
+        st.rerun()
 
 
 def render_central_chat():

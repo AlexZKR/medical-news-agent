@@ -1,6 +1,6 @@
 """In-memory implementation of FindingsRepository."""
 
-from medicalagent.domain.dialog import Finding
+from medicalagent.domain.finding import Finding
 from medicalagent.ports.findings_repository import FindingsRepository
 
 

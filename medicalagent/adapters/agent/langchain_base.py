@@ -12,6 +12,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
 from medicalagent.adapters.agent.tools.openalex_search_tool import openalex_search_tool
+from medicalagent.adapters.agent.tools.save_finding_tool import save_finding_tool
 from medicalagent.adapters.agent.tools.semantic_scholar_search import (
     semantic_scholar_tool,
 )
@@ -45,7 +46,7 @@ class LangChainAgentService(AgentService):
         duckducksearch_tool = DuckDuckGoSearchRun()
 
         chat_model = ChatGroq(
-            model_name="qwen/qwen3-32b",
+            model_name=settings.AI_SETTINGS.main_model,
             temperature=0,
             max_tokens=None,
             # reasoning_format="hidden",
@@ -60,6 +61,7 @@ class LangChainAgentService(AgentService):
             model=chat_model,
             tools=[
                 get_tavily(),
+                save_finding_tool,
                 duckducksearch_tool,
                 semantic_scholar_tool,
                 openalex_search_tool,
@@ -70,10 +72,49 @@ class LangChainAgentService(AgentService):
     def call_agent(
         self, prompt: str, chat_history: list[ChatMessage]
     ) -> list[AIMessage]:
-        """Call the agent with a prompt and return the cleaned response."""
         try:
+            # 1. GENERATE CONTEXT FROM FINDINGS
+            from medicalagent.drivers.di import di_container
+            from medicalagent.drivers.st_state import session_state
+
+            findings_context = ""
+            if session_state.active_dialog_id:
+                # Fetch findings
+                findings = di_container.findings_repository.get_by_dialog_id(
+                    session_state.active_dialog_id
+                )
+
+                # A. Blacklist Context (Items marked non-relevant)
+                blacklist = [f for f in findings if f.non_relevance_mark]
+                if blacklist:
+                    findings_context += "\n\n🚫 EXCLUSION LIST (User marked these as IRRELEVANT - Do NOT suggest similar):"
+                    for f in blacklist:
+                        findings_context += (
+                            f"\n- {f.title} (Reason: {f.relevance_reason})"
+                        )
+
+                # B. Recap Context (Items already found)
+                existing = [f for f in findings if not f.non_relevance_mark]
+                if existing:
+                    findings_context += (
+                        "\n\n✅ EXISTING FINDINGS (Already found - Do not duplicate):"
+                    )
+                    for f in existing:
+                        findings_context += f"\n- {f.title}"
+
+            # 2. PREPARE MESSAGES
             messages_payload = self._map_history_to_langchain(chat_history)
-            messages_payload.append(HumanMessage(prompt))
+
+            # Inject context if we have it
+            if findings_context:
+                # Add as a System Message at the very end to ensure high attention
+                messages_payload.append(
+                    SystemMessage(content=f"SYSTEM CONTEXT UPDATE:{findings_context}")
+                )
+
+            messages_payload.append(HumanMessage(content=prompt))
+
+            # 3. INVOKE
             result = self._agent.invoke({"messages": messages_payload})
             return [result["messages"][-1]]
 

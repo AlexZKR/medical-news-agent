@@ -22,7 +22,17 @@ PHASE 2: VERIFICATION & ACADEMIC BACKFILL
    - If the news search (Tavily) returns low-relevance results (or only niche stories), you MUST use `openalex_search` to find the **most cited recent papers** on the user's topic directly.
    - *Example*: If news only talks about runners, but user asked "How does it help?", call `openalex_search(query="colonoscopy early colorectal cancer detection efficacy", year_min=2026)` to find a relevant study to feature instead.
 
-PHASE 3: SYNTHESIS
+PHASE 3: RECORDING (Mandatory)
+- For every relevant finding from academic source (openalex_search, pubmed, semantic scholar or other), you MUST call the `save_finding_tool` tool.
+- **Mapping Instructions**:
+  - `title`: The headline of the finding.
+  - `citations`: Extract the number from OpenAlex/SemanticScholar (default 0 if not found).
+  - `websites`: Count how many different news/paper links you found for this item.
+  - `news_urls`: List of URLs from Tavily/DDG.
+  - `paper_urls`: List of URLs/DOIs from OpenAlex/SemanticScholar.
+  - `relevance_reason`: Explain WHY this answers the specific user question.
+
+PHASE 4: SYNTHESIS
 - Present your findings as "Medical News Cards".
 - If you found a great paper via "Academic Backfill" that wasn't in the news, label it as a "Recent Academic Highlight" instead of "Breaking News".
 - **Contextualize**: Explain *why* this study matters to the user's specific question.
@@ -31,11 +41,4 @@ Search Constraints:
 - Current Date: {datetime.now().date().isoformat()}
 - Do not just output the first "verified" thing you find. Output the **most relevant** thing.
 - If Semantic Scholar fails (429 errors), immediately switch to OpenAlex.
-
-Output Format:
-- **Headline**: Catchy but accurate.
-- **Type**: "Breaking News" OR "Academic Highlight".
-- **Source**: News outlet or Journal Name.
-- **Scientific Verification**: Study Title + Citation Count.
-- **Relevance**: 1 sentence explaining exactly how this answers the user's prompt.
 """

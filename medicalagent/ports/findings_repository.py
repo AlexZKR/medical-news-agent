@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from medicalagent.domain.dialog import Finding
+from medicalagent.domain.finding import Finding
 
 
 class FindingsRepository(ABC):

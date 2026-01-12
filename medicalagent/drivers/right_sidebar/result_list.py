@@ -1,6 +1,6 @@
 import streamlit as st
 
-from medicalagent.domain.dialog import Finding
+from medicalagent.domain.finding import Finding
 from medicalagent.drivers.right_sidebar.result_card import render_result_card
 
 # Container Heights
