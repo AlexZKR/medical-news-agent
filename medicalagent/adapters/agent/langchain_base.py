@@ -31,7 +31,7 @@ class LangChainAgentService(AgentService):
     def __init__(self, container):
         """Initialize the agent service with the LangChain agent."""
         self._agent = self._create_agent()
-        self._container = container
+        self.container = container
 
     def _map_history_to_langchain(self, history: list[ChatMessage]) -> list:
         """Converts internal chat history to LangChain format."""

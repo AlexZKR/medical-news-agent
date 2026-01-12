@@ -16,7 +16,7 @@ def render_right_sidebar():
     # Get findings for the current active dialog
     active_dialog_id = session_state.active_dialog_id
 
-    if active_dialog_id:
+    if active_dialog_id is not None:
         current_findings = di_container.findings_repository.get_by_dialog_id(
             active_dialog_id
         )

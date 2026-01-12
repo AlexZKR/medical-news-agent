@@ -81,6 +81,6 @@ def save_finding_tool(
     )
 
     # 4. Save
-    runtime.context.di_container.findings_repository.save(new_finding)
+    runtime.context.container.findings_repository.save(new_finding)
 
     return f"Success: Saved finding '{title}' to sidebar."

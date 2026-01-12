@@ -29,7 +29,7 @@ def openalex_search_tool(
     """
     # 1. Dependency Injection (Local import to avoid circular dependency)
 
-    transport = runtime.context.di_container.http_transport
+    transport = runtime.context.container.http_transport
 
     base_url = "https://api.openalex.org/works"
 

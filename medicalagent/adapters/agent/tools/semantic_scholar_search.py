@@ -33,7 +33,7 @@ def semantic_scholar_tool(runtime: ToolRuntime, query: str) -> str:
     request_data = HTTPRequestData(method="GET", url=url, params=params)
 
     try:
-        transport = runtime.context.di_container.http_transport
+        transport = runtime.context.container.http_transport
         data: Any = transport.request(request_data)
 
         # Access the 'data' key which contains the list of papers
