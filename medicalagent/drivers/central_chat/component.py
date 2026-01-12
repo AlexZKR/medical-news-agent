@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import streamlit as st
 
 from medicalagent.adapters.agent.dialog_title_generator import (
@@ -8,13 +10,15 @@ from medicalagent.drivers.di import di_container
 from medicalagent.drivers.st_state import session_state
 from medicalagent.drivers.user_service import get_current_user
 
+logger = getLogger(__name__)
+
 
 def render_chat_header(active_dialog):
     """Renders the chat interface header."""
     if active_dialog:
         st.subheader(f"💬 {active_dialog.title}")
     else:
-        st.subheader("💬 No dialog selected")
+        st.subheader("💬 New Conversation")
 
 
 def render_chat_messages(chat_history: list[ChatMessage]):
@@ -28,62 +32,71 @@ def handle_chat_input():
     """Handles user chat input and generates responses."""
 
     if prompt := st.chat_input("Submit a request", max_chars=1500):
-        # 1. Immediate UI Feedback
+        # 1. Render User Message Immediately
         with st.chat_message("user"):
             st.markdown(prompt)
 
         user = get_current_user()
         active_dialog_id = session_state.active_dialog_id
 
-        # --- CRITICAL FIX: PRE-CREATION ---
-        # If this is a new chat, we must create the dialog container FIRST.
-        # This ensures 'active_dialog_id' is populated when the Agent tries to use tools.
+        # ---------------------------------------------------------
+        # CRITICAL FIX: Pre-Create Dialog if one doesn't exist
+        # ---------------------------------------------------------
+        # The agent needs a valid dialog_id for the 'save_finding' tool
+        # to work. We create an empty container first.
         if active_dialog_id is None:
             new_dialog = di_container.dialog_repository.create(
                 title=DEFAULT_DIALOG_TITLE,
                 messages=[],  # Start empty
                 user_id=user.id,
             )
-            # Set the ID in session_state immediately so the Tool can see it
+            # Set state IMMEDIATELY so the tool sees it
             session_state.set_active_dialog(new_dialog)
             active_dialog_id = new_dialog.id
 
-        # 2. Get Context (Now guaranteed to exist)
+        # 2. Fetch Context (Now guaranteed to exist)
         dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
         chat_history = dialog.chat_history
 
         # 3. Call Agent
         with st.chat_message("assistant"):
             msg_ph = st.empty()
-            msg_ph.markdown("🔍 *Generating response...*")
+            msg_ph.markdown("🔍 *Researching & verifying...*")
 
             try:
+                # Agent can now safely call 'save_finding_tool'
+                # because session_state.active_dialog_id is set.
                 response = di_container.agent_service.call_agent(
-                    prompt, chat_history=chat_history
+                    prompt, chat_history=chat_history, dialog_id=active_dialog_id
                 )
                 response_text = (
                     response[0].content
                     if isinstance(response, list)
                     else response.content
                 )
+
                 msg_ph.markdown(response_text, text_alignment="justify")
 
             except Exception as e:
-                msg_ph.error(f"Agent Error: {str(e)}")
+                logger.error(f"Agent failed: {e}", exc_info=True)
+                msg_ph.error(f"An error occurred: {str(e)}")
                 return
 
         # 4. Save Interaction
         user_msg = ChatMessage(role="user", content=prompt)
         ai_msg = ChatMessage(role="assistant", content=response_text)
 
+        # We append to the existing object we retrieved/created above
         dialog.chat_history.extend([user_msg, ai_msg])
 
         # 5. Smart Renaming (Lazy)
-        # If the title is still the default (meaning we just created it),
-        # generate a real title based on the user's prompt.
+        # If this was a new dialog (still has default title), give it a real name
         if dialog.title == DEFAULT_DIALOG_TITLE:
-            new_title = generate_conversation_title(prompt)
-            dialog.title = new_title
+            try:
+                new_title = generate_conversation_title(prompt)
+                dialog.title = new_title
+            except Exception:
+                pass  # Fallback to default if generator fails
 
         # 6. Persist & Refresh
         di_container.dialog_repository.save(dialog)

@@ -1,6 +1,7 @@
 from typing import Any
 
 from langchain_core.tools import tool
+from langgraph.prebuilt.tool_node import ToolRuntime
 from pydantic import BaseModel, Field
 
 from medicalagent.infra.requests_transport.exceptions import BaseTransportException
@@ -14,7 +15,7 @@ class SemanticScholarInput(BaseModel):
 
 
 @tool("semantic_scholar_search", args_schema=SemanticScholarInput)
-def semantic_scholar_tool(query: str) -> str:
+def semantic_scholar_tool(runtime: ToolRuntime, query: str) -> str:
     """
     Search for academic papers on Semantic Scholar.
     Use it for finding verification, citations, and original sources for medical news.
@@ -32,9 +33,7 @@ def semantic_scholar_tool(query: str) -> str:
     request_data = HTTPRequestData(method="GET", url=url, params=params)
 
     try:
-        from medicalagent.drivers.di import di_container
-
-        transport = di_container.http_transport
+        transport = runtime.context.di_container.http_transport
         data: Any = transport.request(request_data)
 
         # Access the 'data' key which contains the list of papers

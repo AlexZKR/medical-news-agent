@@ -10,7 +10,7 @@ class AgentService(ABC):
 
     @abstractmethod
     def call_agent(
-        self, prompt: str, chat_history: list[ChatMessage]
+        self, prompt: str, chat_history: list[ChatMessage], dialog_id: int
     ) -> list[AIMessage]:
         """Call the agent with a prompt and return the response.
 

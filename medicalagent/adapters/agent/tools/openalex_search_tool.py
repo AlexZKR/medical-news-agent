@@ -1,9 +1,8 @@
 from langchain_core.tools import tool
+from langgraph.prebuilt.tool_node import ToolRuntime
 from pydantic import BaseModel, Field
 
 from medicalagent.infra.requests_transport.exceptions import BaseTransportException
-
-# Import your custom infrastructure
 from medicalagent.infra.requests_transport.schemas import HTTPRequestData
 
 
@@ -20,16 +19,17 @@ class OpenAlexInput(BaseModel):
 
 
 @tool("openalex_search", args_schema=OpenAlexInput)
-def openalex_search_tool(query: str, year_min: int | None = None) -> str:
+def openalex_search_tool(
+    runtime: ToolRuntime, query: str, year_min: int | None = None
+) -> str:
     """
     Search OpenAlex for scientific papers using the internal requests transport.
     Returns Title, Year, Citations, DOI, and Abstract.
     Automatically handles retries and year expansion if no results are found.
     """
     # 1. Dependency Injection (Local import to avoid circular dependency)
-    from medicalagent.drivers.di import di_container
 
-    transport = di_container.http_transport
+    transport = runtime.context.di_container.http_transport
 
     base_url = "https://api.openalex.org/works"
 

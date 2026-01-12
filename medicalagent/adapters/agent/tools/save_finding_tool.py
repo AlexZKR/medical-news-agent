@@ -1,8 +1,10 @@
 import uuid
 
 from langchain_core.tools import tool
+from langgraph.prebuilt.tool_node import ToolRuntime
 from pydantic import BaseModel, Field
 
+from medicalagent.adapters.agent.langchain_base import AgentContext
 from medicalagent.domain.dialog import Link
 from medicalagent.domain.finding import Finding
 
@@ -32,6 +34,7 @@ class SaveFindingInput(BaseModel):
 
 @tool("save_finding_tool", args_schema=SaveFindingInput)
 def save_finding_tool(
+    runtime: ToolRuntime[AgentContext],
     title: str,
     source: str,
     relevance_reason: str,
@@ -44,11 +47,9 @@ def save_finding_tool(
     Saves a verified medical finding to the side panel.
     Call this for EVERY relevant result you find before generating the final answer.
     """
-    from medicalagent.drivers.di import di_container
-    from medicalagent.drivers.st_state import session_state
 
     # 1. Validation
-    dialog_id = session_state.active_dialog_id
+    dialog_id = runtime.context.dialog_id
     if dialog_id is None:
         return "Error: No active dialog. Cannot save finding."
 
@@ -80,6 +81,6 @@ def save_finding_tool(
     )
 
     # 4. Save
-    di_container.findings_repository.save(new_finding)
+    runtime.context.di_container.findings_repository.save(new_finding)
 
     return f"Success: Saved finding '{title}' to sidebar."

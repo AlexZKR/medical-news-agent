@@ -30,7 +30,7 @@ class AISettings(BaseSettings):
     )
     groq_api_key: SecretStr = SecretStr("XXX")
     tavily_api_key: SecretStr = SecretStr("XXX")
-    main_model: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    main_model: str = "moonshotai/kimi-k2-instruct"
 
 
 class PostgreSQLSettings(BaseSettings):
