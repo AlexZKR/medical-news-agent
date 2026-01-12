@@ -1,4 +1,5 @@
 import streamlit as st
+from dotenv import load_dotenv
 
 from medicalagent.config.env_load import load_secrets_into_env
 from medicalagent.drivers.central_chat.component import render_central_chat
@@ -7,6 +8,7 @@ from medicalagent.drivers.left_sidebar.component import render_left_sidebar
 from medicalagent.drivers.right_sidebar.component import render_right_sidebar
 from medicalagent.drivers.user_service import create_user
 
+load_dotenv()
 st.set_page_config(
     page_title="Medical News Agent",
     page_icon="🧬",

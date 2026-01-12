@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from langchain.agents import create_agent
 from langchain_core.messages import (
     AIMessage,
@@ -11,6 +13,8 @@ from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
 from medicalagent.config import settings
 from medicalagent.domain.dialog import ChatMessage
 from medicalagent.ports.agent import AgentService
+
+logger = getLogger(__name__)
 
 
 class LangChainAgentService(AgentService):
@@ -55,6 +59,8 @@ class LangChainAgentService(AgentService):
         try:
             messages_payload = self._map_history_to_langchain(chat_history)
             messages_payload.append(HumanMessage(prompt))
+            logger.info(f"Calling agent with {len(messages_payload)} messages")
+
             result = self._agent.invoke({"messages": messages_payload})
             return [result["messages"][-1]]
 

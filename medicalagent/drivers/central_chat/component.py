@@ -32,9 +32,9 @@ def handle_chat_input():
             st.markdown(prompt)
 
         chat_history = []
-        if dialog_id := session_state.active_dialog_id:
+        if session_state.active_dialog_id is not None:
             chat_history = di_container.dialog_repository.get_chat_history_by_id(
-                dialog_id
+                session_state.active_dialog_id
             )
 
         with st.chat_message("assistant"):
