@@ -1,4 +1,4 @@
-from newssearch.infrastructure.transport.schemas import ResponseContent
+from medicalagent.infra.requests_transport.schemas import ResponseContent
 
 
 class BaseTransportException(Exception):

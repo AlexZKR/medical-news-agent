@@ -16,8 +16,9 @@ class HTTPTransportSettings(BaseSettings):
 
 
 class RetryBackoffSettings(BaseSettings):
-    max_retries: int = 3
-    backoff_factor: float = 0.1
+    max_retries: int = 5
+    backoff_factor: float = 0.2
+    backoff_jitter: float = 2
     max_backoff: int = 120
     status_forcelist: list[int] = [413, 429, 502, 503, 504]
     allowed_methods: frozenset[str] = urllib3.Retry.DEFAULT_ALLOWED_METHODS

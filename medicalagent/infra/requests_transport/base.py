@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 
-from newssearch.infrastructure.transport.schemas import HTTPRequestData, ResponseContent
+from medicalagent.infra.requests_transport.schemas import (
+    HTTPRequestData,
+    ResponseContent,
+)
 
 
 class AbstractSyncHTTPTransport(ABC):

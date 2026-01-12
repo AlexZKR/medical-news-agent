@@ -6,6 +6,10 @@ from medicalagent.adapters.repositories import (
     InMemoryFindingsRepository,
     InMemoryUserRepository,
 )
+from medicalagent.infra.requests_transport.base import AbstractSyncHTTPTransport
+from medicalagent.infra.requests_transport.requests_transport import (
+    RequestsHTTPTransport,
+)
 from medicalagent.ports import (
     AgentService,
     DialogRepository,
@@ -23,6 +27,7 @@ class DIContainer:
         self._findings_repository = InMemoryFindingsRepository()
         self._user_repository = InMemoryUserRepository()
         self._agent_service = LangChainAgentService()
+        self._http_transport = RequestsHTTPTransport()
 
     @property
     def dialog_repository(self) -> DialogRepository:
@@ -43,6 +48,10 @@ class DIContainer:
     def user_repository(self) -> UserRepository:
         """Get the user repository instance."""
         return self._user_repository
+
+    @property
+    def http_transport(self) -> AbstractSyncHTTPTransport:
+        return self._http_transport
 
 
 di_container = DIContainer()

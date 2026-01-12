@@ -11,6 +11,7 @@ from langchain_groq import ChatGroq
 from langgraph.graph.state import CompiledStateGraph
 
 from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
+from medicalagent.adapters.agent.tools.openalex_search_tool import openalex_search_tool
 from medicalagent.adapters.agent.tools.semantic_scholar_search import (
     semantic_scholar_tool,
 )
@@ -61,6 +62,7 @@ class LangChainAgentService(AgentService):
                 get_tavily(),
                 duckducksearch_tool,
                 semantic_scholar_tool,
+                openalex_search_tool,
             ],
         )
         return agent

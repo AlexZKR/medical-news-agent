@@ -1,6 +1,10 @@
-import requests
+from typing import Any
+
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
+
+from medicalagent.infra.requests_transport.exceptions import BaseTransportException
+from medicalagent.infra.requests_transport.schemas import HTTPRequestData
 
 
 class SemanticScholarInput(BaseModel):
@@ -12,7 +16,7 @@ class SemanticScholarInput(BaseModel):
 @tool("semantic_scholar_search", args_schema=SemanticScholarInput)
 def semantic_scholar_tool(query: str) -> str:
     """
-    Search for academic papers on Semantic Scholar.
+    Search for academic papers on Semantic Scholar using internal requests transport.
     Useful for finding verification, citations, and original sources for medical news.
     """
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -24,30 +28,51 @@ def semantic_scholar_tool(query: str) -> str:
         "fields": "title,url,abstract,year,citationCount,isOpenAccess,authors",
     }
 
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+    # Create Request Data Object
+    request_data = HTTPRequestData(method="GET", url=url, params=params)
 
-        if not data.get("data"):
+    try:
+        from medicalagent.drivers.di import di_container
+
+        transport = di_container.http_transport
+        data: Any = transport.request(request_data)
+
+        # Access the 'data' key which contains the list of papers
+        papers = data.get("data", [])
+
+        if not papers:
             return "No academic papers found for this query."
 
         results = []
-        for paper in data["data"]:
-            authors = ", ".join([a["name"] for a in paper.get("authors", [])[:3]])
-            if len(paper.get("authors", [])) > 3:
-                authors += " et al."
+        for paper in papers:
+            # Format authors list safely
+            authors_list = paper.get("authors", [])
+            authors_names = [a.get("name", "Unknown") for a in authors_list[:3]]
+            authors_str = ", ".join(authors_names)
+            if len(authors_list) > 3:
+                authors_str += " et al."
+
+            # Format Abstract (handle None and truncation)
+            abstract = paper.get("abstract")
+            if abstract:
+                abstract_preview = abstract[:400] + "..."
+            else:
+                abstract_preview = "No abstract available"
 
             results.append(
-                f"Title: {paper.get('title')}\n"
-                f"Year: {paper.get('year')}\n"
-                f"Citations: {paper.get('citationCount')}\n"
-                f"Authors: {authors}\n"
-                f"Link: {paper.get('url')}\n"
-                f"Abstract: {paper.get('abstract', 'No abstract')[:400]}..."
+                f"Title: {paper.get('title', 'Untitled')}\n"
+                f"Year: {paper.get('year', 'N/A')}\n"
+                f"Citations: {paper.get('citationCount', 0)}\n"
+                f"Authors: {authors_str}\n"
+                f"Link: {paper.get('url', 'N/A')}\n"
+                f"Abstract: {abstract_preview}"
             )
 
         return "\n\n".join(results)
 
+    except BaseTransportException as e:
+        # Handle specific transport errors (429s, 500s, etc.)
+        return f"Semantic Scholar Search Failed: {e.message} (Status: {e.status_code})"
     except Exception as e:
-        return f"Error searching Semantic Scholar: {str(e)}"
+        # Handle unexpected parsing or logic errors
+        return f"Unexpected Error searching Semantic Scholar: {str(e)}"
