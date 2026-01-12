@@ -1,10 +1,15 @@
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    HumanMessage,
+    SystemMessage,
+)
 from langchain_groq import ChatGroq
 from langgraph.graph.state import CompiledStateGraph
 
 from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
 from medicalagent.config import settings
+from medicalagent.domain.dialog import ChatMessage
 from medicalagent.ports.agent import AgentService
 
 
@@ -15,6 +20,16 @@ class LangChainAgentService(AgentService):
         """Initialize the agent service with the LangChain agent."""
         self._agent = self._create_agent()
 
+    def _map_history_to_langchain(self, history: list[ChatMessage]) -> list:
+        """Converts internal chat history to LangChain format."""
+        lc_messages: list[HumanMessage | AIMessage] = []
+        for msg in history:
+            if msg.role == "user":
+                lc_messages.append(HumanMessage(content=msg.content))
+            elif msg.role == "assistant":
+                lc_messages.append(AIMessage(content=msg.content))
+        return lc_messages
+
     def _create_agent(self) -> CompiledStateGraph:
         """Create and configure the LangChain agent."""
         chat_model = ChatGroq(
@@ -23,7 +38,7 @@ class LangChainAgentService(AgentService):
             max_tokens=None,
             # reasoning_format="hidden",
             timeout=None,
-            include_reasoning=False,
+            model_kwargs={"include_reasoning": False},
             max_retries=2,
             api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
         )
@@ -33,16 +48,15 @@ class LangChainAgentService(AgentService):
         )
         return agent
 
-    def call_agent(self, prompt: str) -> list[AIMessage]:
+    def call_agent(
+        self, prompt: str, chat_history: list[ChatMessage]
+    ) -> list[AIMessage]:
         """Call the agent with a prompt and return the cleaned response."""
         try:
-            message = HumanMessage(prompt)
-            result = self._agent.invoke(message)
-            messages = [msg for msg in result["messages"]]
-            return messages
+            messages_payload = self._map_history_to_langchain(chat_history)
+            messages_payload.append(HumanMessage(prompt))
+            result = self._agent.invoke({"messages": messages_payload})
+            return [result["messages"][-1]]
 
         except Exception as e:
-            error_message = (
-                f"Sorry, I encountered an error while researching your query: {str(e)}"
-            )
-            return [AIMessage(content=error_message)]
+            return [AIMessage(content=f"Error: {str(e)}")]

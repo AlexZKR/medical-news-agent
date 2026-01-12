@@ -36,7 +36,8 @@ def get_current_user() -> UserData:
     """Get the current user's data, creating it if it doesn't exist."""
     email = get_current_user_email()
     if not email:
-        raise ValueError("User not found, email is None")
+        st.logout()
+        return  # type: ignore
 
     user_repo = di_container.user_repository
     user_data = user_repo.get_by_email(email)

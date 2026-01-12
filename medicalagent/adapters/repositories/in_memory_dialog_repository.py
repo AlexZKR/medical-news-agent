@@ -36,6 +36,10 @@ class InMemoryDialogRepository(DialogRepository):
         """Get a dialog by ID."""
         return next((d for d in self._dialogs if d.id == dialog_id), None)
 
+    def get_chat_history_by_id(self, dialog_id: int) -> list[ChatMessage]:
+        dialog = self.get_by_id(dialog_id)
+        return dialog.chat_history if dialog else []
+
     def save(self, dialog: Dialog) -> None:
         """Save a dialog."""  # Check if dialog already exists
         existing = self.get_by_id(dialog.id)

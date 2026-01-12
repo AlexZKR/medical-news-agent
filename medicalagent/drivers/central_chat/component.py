@@ -31,11 +31,19 @@ def handle_chat_input():
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        chat_history = []
+        if dialog_id := session_state.active_dialog_id:
+            chat_history = di_container.dialog_repository.get_chat_history_by_id(
+                dialog_id
+            )
+
         with st.chat_message("assistant"):
             msg_ph = st.empty()
             msg_ph.markdown("🔍 *Generating response...*")
 
-            response = di_container.agent_service.call_agent(prompt)
+            response = di_container.agent_service.call_agent(
+                prompt, chat_history=chat_history
+            )
             response_text = (
                 response[0].content if isinstance(response, list) else response.content
             )

@@ -31,6 +31,10 @@ class DialogRepository(ABC):
         pass
 
     @abstractmethod
+    def get_chat_history_by_id(self, dialog_id: int) -> list[ChatMessage]:
+        pass
+
+    @abstractmethod
     def save(self, dialog: Dialog) -> None:
         """Save a dialog."""
         pass

@@ -2,12 +2,16 @@ from abc import ABC, abstractmethod
 
 from langchain_core.messages import AIMessage
 
+from medicalagent.domain.dialog import ChatMessage
+
 
 class AgentService(ABC):
     """Abstract interface for AI agent services."""
 
     @abstractmethod
-    def call_agent(self, prompt: str) -> list[AIMessage]:
+    def call_agent(
+        self, prompt: str, chat_history: list[ChatMessage]
+    ) -> list[AIMessage]:
         """Call the agent with a prompt and return the response.
 
         Args:

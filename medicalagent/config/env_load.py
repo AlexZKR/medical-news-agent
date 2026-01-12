@@ -8,7 +8,7 @@ def load_secrets_into_env():
     Bridge function: Loads Streamlit secrets into os.environ
     so Pydantic Settings and LangChain can see them.
     """
-    # Only run this if we are in Streamlit
+
     if hasattr(st, "secrets"):
         for key, value in st.secrets.items():
             # Streamlit secrets can be nested (tables), strictly speaking
