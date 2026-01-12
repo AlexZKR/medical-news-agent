@@ -16,8 +16,8 @@ class SemanticScholarInput(BaseModel):
 @tool("semantic_scholar_search", args_schema=SemanticScholarInput)
 def semantic_scholar_tool(query: str) -> str:
     """
-    Search for academic papers on Semantic Scholar using internal requests transport.
-    Useful for finding verification, citations, and original sources for medical news.
+    Search for academic papers on Semantic Scholar.
+    Use it for finding verification, citations, and original sources for medical news.
     """
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
 

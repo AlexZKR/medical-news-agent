@@ -1,5 +1,3 @@
-from typing import Any
-
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
@@ -25,54 +23,78 @@ class OpenAlexInput(BaseModel):
 def openalex_search_tool(query: str, year_min: int | None = None) -> str:
     """
     Search OpenAlex for scientific papers using the internal requests transport.
-    Returns Title, Year, Citations, Open Access status, and Abstract.
+    Returns Title, Year, Citations, DOI, and Abstract.
+    Automatically handles retries and year expansion if no results are found.
     """
+    # 1. Dependency Injection (Local import to avoid circular dependency)
+    from medicalagent.drivers.di import di_container
+
+    transport = di_container.http_transport
+
     base_url = "https://api.openalex.org/works"
 
-    # 1. Construct Filters
-    filters = ["has_doi:true", "type:article"]
-    if year_min:
-        filters.append(f"from_publication_date:{year_min}-01-01")
-
-    # 2. Optimize Fields (Token Efficiency)
+    # 2. Field Selection (Optimization: ~8x smaller response)
+    # We only fetch what we need to render the card.
     fields = [
         "id",
         "title",
         "publication_year",
         "cited_by_count",
-        "open_access",
+        "doi",
         "primary_location",
-        "abstract_inverted_index",
         "authorships",
+        "abstract_inverted_index",  # Required to reconstruct the abstract
     ]
 
-    params = {
-        "search": query,
-        "filter": ",".join(filters),
-        "sort": "relevance_score:desc,cited_by_count:desc",
-        "per_page": 5,
-        "select": ",".join(fields),
-        # "mailto": "your_email@example.com",  # TODO: Add your email for "Polite Pool"
-    }
+    # 3. Helper to build params and execute request
+    def execute_search(search_year: int | None) -> list:
+        # Construct Filters
+        # We filter for articles to avoid datasets/paratext
+        filters = ["type:article", "has_doi:true"]
 
-    # 3. Create Request Data Object using your Schema
-    request_data = HTTPRequestData(method="GET", url=base_url, params=params)
+        if search_year:
+            # Use the efficient publication_year filter
+            filters.append(f"publication_year:>{search_year - 1}")
+
+        params = {
+            "search": query,
+            "filter": ",".join(filters),
+            # Sort by date (newest) then impact (citations)
+            "sort": "publication_year:desc,cited_by_count:desc",
+            "per_page": 5,
+            "select": ",".join(fields),
+            # Polite Pool: Increases rate limit to 10 req/s
+            "mailto": "medical_agent_user@example.com",
+        }
+
+        request_data = HTTPRequestData(method="GET", url=base_url, params=params)
+
+        response_data = transport.request(request_data)
+        return response_data.get("results", [])
 
     try:
-        from medicalagent.drivers.di import di_container
+        # 4. Execution with Smart Fallback
+        results = execute_search(year_min)
 
-        transport = di_container.http_transport
-        data: Any = transport.request(request_data)
-
-        # 'data' is already a dict because _parse_content handles Content-Type: json
-        results = data.get("results", [])
+        # Fallback: If strict year search failed (common in early Jan for new year),
+        # try relaxing the date constraint by one year.
+        expanded_search = False
+        if not results and year_min:
+            results = execute_search(year_min - 1)
+            expanded_search = True
 
         if not results:
-            return "No academic sources found on OpenAlex."
+            return "No academic sources found on OpenAlex for this query."
 
+        # 5. Result Formatting
         output = []
+        if expanded_search:
+            output.append(
+                f"NOTE: No results found for {year_min}. Showing results from {year_min - 1}+."
+            )
+
         for work in results:
-            # Reconstruct abstract
+            # Reconstruct abstract from inverted index
             abstract_text = "No abstract available."
             index = work.get("abstract_inverted_index")
             if index:
@@ -82,35 +104,30 @@ def openalex_search_tool(query: str, year_min: int | None = None) -> str:
                         word_list.append((pos, word))
                 abstract_text = " ".join([w[1] for w in sorted(word_list)])
 
-            # Extract basic info
-            title = work.get("title")
-            year = work.get("publication_year")
-            citations = work.get("cited_by_count")
-
-            # Extract Authors
+            # Extract Authors (Safe parsing)
             authors = []
             for authorship in work.get("authorships", [])[:3]:
-                authors.append(
-                    authorship.get("author", {}).get("display_name", "Unknown")
+                author_name = authorship.get("author", {}).get(
+                    "display_name", "Unknown"
                 )
-            author_str = ", ".join(authors) + (
-                " et al." if len(work.get("authorships", [])) > 3 else ""
-            )
+                authors.append(author_name)
 
-            # Extract URL
-            location = work.get("primary_location") or {}
-            link = (
-                location.get("pdf_url")
-                or location.get("landing_page_url")
-                or work.get("id")
-            )
+            author_str = ", ".join(authors)
+            if len(work.get("authorships", [])) > 3:
+                author_str += " et al."
+
+            # Extract DOI/Link
+            doi = work.get("doi")
+            if not doi:
+                loc = work.get("primary_location") or {}
+                doi = loc.get("landing_page_url") or work.get("id")
 
             output.append(
-                f"Title: {title}\n"
-                f"Year: {year} | Citations: {citations}\n"
+                f"Title: {work.get('title')}\n"
+                f"Year: {work.get('publication_year')} | Citations: {work.get('cited_by_count')}\n"
                 f"Authors: {author_str}\n"
-                f"Link: {link}\n"
-                f"Abstract: {abstract_text[:400]}..."
+                f"Link: {doi}\n"
+                f"Abstract: {abstract_text[:600]}..."  # Truncate to save context
             )
 
         return "\n\n".join(output)
