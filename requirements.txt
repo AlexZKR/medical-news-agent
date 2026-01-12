@@ -2,12 +2,17 @@ streamlit[auth]
 langchain
 langchain-groq
 langgraph
+langchain-community
+duckduckgo-search
+ddgs
 langchain-groq
 pydantic
 pydantic-settings
 Authlib
 structlog
 rich
+langchain-tavily
+requests
 
 ruff
 bandit

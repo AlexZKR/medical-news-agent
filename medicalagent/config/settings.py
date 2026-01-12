@@ -1,7 +1,26 @@
 from urllib import parse
 
+import urllib3
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class HTTPTransportSettings(BaseSettings):
+    chunk_size: int = 8192
+    user_agent: str = "MedicalNewsAgent/1.0 pet-project"
+    default_timeout: int = 30
+
+    @property
+    def common_headers(self) -> dict[str, str]:
+        return {"user-agent": self.user_agent}
+
+
+class RetryBackoffSettings(BaseSettings):
+    max_retries: int = 3
+    backoff_factor: float = 0.1
+    max_backoff: int = 120
+    status_forcelist: list[int] = [413, 429, 502, 503, 504]
+    allowed_methods: frozenset[str] = urllib3.Retry.DEFAULT_ALLOWED_METHODS
 
 
 class AISettings(BaseSettings):
@@ -9,6 +28,7 @@ class AISettings(BaseSettings):
         env_prefix="AI_SETTINGS__", env_file=".env", extra="ignore"
     )
     groq_api_key: SecretStr = SecretStr("XXX")
+    tavily_api_key: SecretStr = SecretStr("XXX")
     main_model: str = "moonshotai/kimi-k2-instruct-0905"
 
 

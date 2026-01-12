@@ -1,6 +1,7 @@
 from logging import getLogger
 
 from langchain.agents import create_agent
+from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.messages import (
     AIMessage,
     HumanMessage,
@@ -10,6 +11,10 @@ from langchain_groq import ChatGroq
 from langgraph.graph.state import CompiledStateGraph
 
 from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
+from medicalagent.adapters.agent.tools.semantic_scholar_search import (
+    semantic_scholar_tool,
+)
+from medicalagent.adapters.agent.tools.tavilysearch import get_tavily
 from medicalagent.config import settings
 from medicalagent.domain.dialog import ChatMessage
 from medicalagent.ports.agent import AgentService
@@ -36,6 +41,8 @@ class LangChainAgentService(AgentService):
 
     def _create_agent(self) -> CompiledStateGraph:
         """Create and configure the LangChain agent."""
+        duckducksearch_tool = DuckDuckGoSearchRun()
+
         chat_model = ChatGroq(
             model_name="qwen/qwen3-32b",
             temperature=0,
@@ -48,7 +55,13 @@ class LangChainAgentService(AgentService):
         )
 
         agent: CompiledStateGraph = create_agent(
-            system_prompt=SystemMessage(SYSTEM_PROMPT), model=chat_model
+            system_prompt=SystemMessage(SYSTEM_PROMPT),
+            model=chat_model,
+            tools=[
+                get_tavily(),
+                duckducksearch_tool,
+                semantic_scholar_tool,
+            ],
         )
         return agent
 
@@ -59,8 +72,6 @@ class LangChainAgentService(AgentService):
         try:
             messages_payload = self._map_history_to_langchain(chat_history)
             messages_payload.append(HumanMessage(prompt))
-            logger.info(f"Calling agent with {len(messages_payload)} messages")
-
             result = self._agent.invoke({"messages": messages_payload})
             return [result["messages"][-1]]
 
