@@ -21,5 +21,6 @@ pytest
 pytest-cov
 pytest-asyncio
 pre-commit
+types-requests
 
 -e .

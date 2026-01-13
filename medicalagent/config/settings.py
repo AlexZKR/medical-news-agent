@@ -30,7 +30,15 @@ class AISettings(BaseSettings):
     )
     groq_api_key: SecretStr = SecretStr("XXX")
     tavily_api_key: SecretStr = SecretStr("XXX")
-    main_model: str = "moonshotai/kimi-k2-instruct"
+
+    primary_model: str = "moonshotai/kimi-k2-instruct-0905"
+    primary_model_max_tokens: int = 10_000
+
+    fallback_model: str = "meta-llama/llama-4-scout-17b-16e-instruct"
+    fallback_model_max_tokens: int = 30_000
+
+    summarization_model: str = "llama-3.1-8b-instant"
+    summarization_model_max_tokens: int = 10_000
 
 
 class PostgreSQLSettings(BaseSettings):
@@ -56,6 +64,14 @@ class PostgreSQLSettings(BaseSettings):
         return f"postgresql://{self.user}{password_part}@{self.host}:{self.port}/{self.name}"
 
 
+class AppSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="app__", env_file=".env", extra="ignore"
+    )
+    ENV: str = "dev"
+
+
 class Settings(BaseSettings):
     AI_SETTINGS: AISettings = AISettings()
     POSTGRESQL: PostgreSQLSettings = PostgreSQLSettings()
+    APP_SETTINGS: AppSettings = AppSettings()

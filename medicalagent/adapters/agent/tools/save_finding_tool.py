@@ -9,6 +9,13 @@ from medicalagent.domain.dialog import Link
 from medicalagent.domain.finding import Finding
 
 
+class LinkSource(BaseModel):
+    url: str = Field(description="The full URL of the source.")
+    label: str = Field(
+        description="A short, concise label for the source (e.g. 'CNN', 'Nature', 'CDC', 'Study DOI'). Max 2-3 words."
+    )
+
+
 class SaveFindingInput(BaseModel):
     """Input schema for saving a finding."""
 
@@ -24,11 +31,12 @@ class SaveFindingInput(BaseModel):
         default=1,
         description="Number of distinct sources/websites found for this item.",
     )
-    news_urls: list[str] = Field(
-        default_factory=list, description="List of URLs for news articles found."
+    news_sources: list[LinkSource] = Field(
+        default_factory=list, description="List of news links with short labels."
     )
-    paper_urls: list[str] = Field(
-        default_factory=list, description="List of URLs/DOIs for academic papers found."
+    paper_sources: list[LinkSource] = Field(
+        default_factory=list,
+        description="List of academic paper links with short labels (e.g. Journal Name).",
     )
 
 
@@ -40,8 +48,8 @@ def save_finding_tool(
     relevance_reason: str,
     citations: int = 0,
     websites: int = 1,
-    news_urls: list[str] | None = None,
-    paper_urls: list[str] | None = None,
+    news_sources: list[LinkSource] | None = None,
+    paper_sources: list[LinkSource] | None = None,
 ) -> str:
     """
     Saves a verified medical finding to the side panel.
@@ -56,13 +64,11 @@ def save_finding_tool(
     # 2. Convert URLs to Link Domain Objects
     # (The agent gives simple URLs, we wrap them for the UI)
     news_links_objects = [
-        Link(title=f"News Source {i + 1}", url=url)
-        for i, url in enumerate(news_urls or [])
+        Link(title=item.label, url=item.url) for item in (news_sources or [])
     ]
 
     paper_links_objects = [
-        Link(title=f"Paper Source {i + 1}", url=url)
-        for i, url in enumerate(paper_urls or [])
+        Link(title=item.label, url=item.url) for item in (paper_sources or [])
     ]
 
     # 3. Create Domain Object
@@ -83,4 +89,4 @@ def save_finding_tool(
     # 4. Save
     runtime.context.container.findings_repository.save(new_finding)
 
-    return f"Success: Saved finding '{title}' to sidebar."
+    return f"Success: Saved finding '{title}' with {len(news_links_objects)} news and {len(paper_links_objects)} papers."

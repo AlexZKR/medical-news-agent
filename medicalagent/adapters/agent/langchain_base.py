@@ -1,6 +1,12 @@
 from logging import getLogger
 
 from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    ClearToolUsesEdit,
+    ContextEditingMiddleware,
+    ModelFallbackMiddleware,
+    SummarizationMiddleware,
+)
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.messages import (
     AIMessage,
@@ -9,6 +15,7 @@ from langchain_core.messages import (
 )
 from langchain_groq import ChatGroq
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.pregel.main import RunnableConfig
 
 from medicalagent.adapters.agent.schemas import AgentContext
 from medicalagent.adapters.agent.system_prompt import SYSTEM_PROMPT
@@ -47,20 +54,36 @@ class LangChainAgentService(AgentService):
         """Create and configure the LangChain agent."""
         duckducksearch_tool = DuckDuckGoSearchRun()
 
-        chat_model = ChatGroq(
-            model_name=settings.AI_SETTINGS.main_model,
+        primary_model = ChatGroq(
+            model_name=settings.AI_SETTINGS.primary_model,
             temperature=0,
-            max_tokens=None,
-            # reasoning_format="hidden",
+            max_tokens=settings.AI_SETTINGS.primary_model_max_tokens,
             timeout=None,
-            # model_kwargs={"include_reasoning": False},
-            max_retries=2,
+            max_retries=3,
+            api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
+        )
+
+        fallback_model = ChatGroq(
+            model_name=settings.AI_SETTINGS.fallback_model,
+            temperature=0,
+            max_tokens=settings.AI_SETTINGS.fallback_model_max_tokens,
+            timeout=None,
+            max_retries=3,
+            api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
+        )
+
+        summarization_model = ChatGroq(
+            model_name=settings.AI_SETTINGS.summarization_model,
+            temperature=0,
+            max_tokens=settings.AI_SETTINGS.summarization_model_max_tokens,
+            timeout=None,
+            max_retries=3,
             api_key=settings.AI_SETTINGS.groq_api_key.get_secret_value(),
         )
 
         agent: CompiledStateGraph = create_agent(
             system_prompt=SystemMessage(SYSTEM_PROMPT),
-            model=chat_model,
+            model=primary_model,
             tools=[
                 get_tavily(),
                 save_finding_tool,
@@ -69,6 +92,27 @@ class LangChainAgentService(AgentService):
                 openalex_search_tool,
             ],
             context_schema=AgentContext,
+            middleware=[
+                ModelFallbackMiddleware(first_model=fallback_model),
+                ContextEditingMiddleware(
+                    edits=[
+                        ClearToolUsesEdit(
+                            trigger=4000,
+                            keep=4,
+                            clear_tool_inputs=False,
+                            exclude_tools=[],
+                        ),
+                    ],
+                ),
+                SummarizationMiddleware(
+                    model=summarization_model,
+                    trigger=[
+                        ("tokens", 6000),
+                        ("messages", 6),
+                    ],
+                    keep=("messages", 20),
+                ),
+            ],
         )
         return agent
 
@@ -116,11 +160,19 @@ class LangChainAgentService(AgentService):
                 )
 
             messages_payload.append(HumanMessage(content=prompt))
+            config = RunnableConfig(
+                tags=[settings.APP_SETTINGS.ENV],
+                metadata={
+                    "env": settings.APP_SETTINGS.ENV,
+                    "dialog_id": dialog_id,
+                },
+            )
 
             # 3. INVOKE
             result = self._agent.invoke(
                 {"messages": messages_payload},
                 context=AgentContext(container=self.container, dialog_id=dialog_id),
+                config=config,
             )
             return [result["messages"][-1]]
 
