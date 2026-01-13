@@ -1,50 +1,37 @@
 """In-memory implementation of UserRepository."""
 
-from medicalagent.domain.dialog import Dialog
 from medicalagent.domain.user import UserData, UserProfile
+from medicalagent.ports import UserRepository
 
 
-class InMemoryUserRepository:
+class InMemoryUserRepository(UserRepository):
     """In-memory implementation of UserRepository using mock data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the repository."""
-        self._users: dict[str, UserData] = {}
+        self._users: dict[int, UserData] = {}
+
+    def get_by_id(self, id: int) -> UserData | None:
+        return self._users.get(id, None)
 
     def get_by_email(self, email: str) -> UserData | None:
         """Get user data by email."""
-        return self._users.get(email)
+        return next((u for u in self._users.values() if u.profile.email == email), None)
 
     def save(self, user_data: UserData) -> None:
         """Save user data."""
-        self._users[user_data.profile.email] = user_data
+        self._users[user_data.id] = user_data
 
-    def delete(self, email: str) -> None:
-        """Delete user data by email."""
-        if email in self._users:
-            del self._users[email]
-
-    def exists(self, email: str) -> bool:
-        """Check if user exists."""
-        return email in self._users
-
-    def get_all_users(self) -> list[str]:
-        """Get all user emails."""
-        return list(self._users.keys())
-
-    def create_default_user(self, email: str, name: str | None = None):
+    def create_user(
+        self, email: str, name: str | None = None, picture: str | None = None
+    ) -> UserData:
         """Create a new user with default data."""
-        profile = UserProfile(email=email, name=name)
+        last_id = 0
+        if self._users:
+            last_id = max(self._users.keys())
 
-        # Create default dialogs for new users
-        default_dialogs = [
-            Dialog(id=1, title="Diabetes Research"),
-            Dialog(id=2, title="Cancer Biomarkers"),
-            Dialog(id=3, title="AI in Medical Diagnosis"),
-            Dialog(id=4, title="COVID-19 Variants"),
-        ]
-
-        user_data = UserData(profile=profile, dialogs=default_dialogs)
+        profile = UserProfile(email=email, name=name, picture=picture)
+        user_data = UserData(profile=profile, id=last_id + 1)
 
         self.save(user_data)
         return user_data

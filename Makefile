@@ -8,7 +8,7 @@ requirements:
 lint: mypy ruff bandit
 
 mypy:
-	mypy .
+	mypy . --check-untyped-defs
 
 ruff:
 	ruff check --config pyproject.toml --fix

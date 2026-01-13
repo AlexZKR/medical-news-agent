@@ -1,32 +1,45 @@
 """Dependency injection container for the Medical News Agent."""
 
-from medicalagent.adapters.repositories import (
-    InMemoryDialogRepository,
-    InMemoryFindingsRepository,
-    InMemoryUserRepository,
+from medicalagent.adapters.agent.langchain_base import LangChainAgentService
+from medicalagent.adapters.repositories.sqla.sqla_dialog_repo import (
+    SQLADialogRepository,
 )
-from medicalagent.data.mock_data import get_initial_research_results
-from medicalagent.ports import DialogRepository, FindingsRepository, UserRepository
+from medicalagent.adapters.repositories.sqla.sqla_findings_repo import (
+    SQLAFindingsRepository,
+)
+from medicalagent.adapters.repositories.sqla.sqla_user_repo import SQLAUserRepository
+from medicalagent.infra.requests_transport.base import AbstractSyncHTTPTransport
+from medicalagent.infra.requests_transport.requests_transport import (
+    RequestsHTTPTransport,
+)
+from medicalagent.ports import (
+    AgentService,
+    DialogRepository,
+    FindingsRepository,
+    UserRepository,
+)
 
 
 class DIContainer:
     """Dependency injection container that provides access to all repositories."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the DI container with concrete implementations."""
-        self._dialog_repository = InMemoryDialogRepository()
-        self._findings_repository = InMemoryFindingsRepository()
-        self._user_repository = InMemoryUserRepository()
-
-        # Initialize findings repository with default data for dialog 1
-        initial_findings = get_initial_research_results(1)
-        for finding in initial_findings:
-            self._findings_repository.save(finding)
+        self._dialog_repository = SQLADialogRepository()
+        self._findings_repository = SQLAFindingsRepository()
+        self._user_repository = SQLAUserRepository()
+        self._http_transport = RequestsHTTPTransport()
+        self._agent_service = LangChainAgentService(container=self)
 
     @property
     def dialog_repository(self) -> DialogRepository:
         """Get the dialog repository instance."""
         return self._dialog_repository
+
+    @property
+    def agent_service(self) -> AgentService:
+        """Get the agent service instance."""
+        return self._agent_service
 
     @property
     def findings_repository(self) -> FindingsRepository:
@@ -38,6 +51,9 @@ class DIContainer:
         """Get the user repository instance."""
         return self._user_repository
 
+    @property
+    def http_transport(self) -> AbstractSyncHTTPTransport:
+        return self._http_transport
 
-# Global DI container instance
-di = DIContainer()
+
+di_container = DIContainer()

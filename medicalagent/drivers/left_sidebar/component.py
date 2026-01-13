@@ -1,7 +1,8 @@
 import streamlit as st
 
-from medicalagent.domain.dialog import Dialog
-from medicalagent.drivers.user_service import get_current_user, save_current_user
+from medicalagent.drivers.di import di_container
+from medicalagent.drivers.st_state import session_state
+from medicalagent.drivers.user_service import get_current_user
 
 from .dialog_list import render_dialog_list
 
@@ -14,25 +15,17 @@ def render_sidebar_header():
 
     with col_new:
         if st.button("", help="Start new dialog", icon="➕"):
-            # Create new dialog for current user
             user = get_current_user()
             if user:
-                # Generate next ID from user's existing dialogs
-                existing_dialogs = user.get_dialogs()
-                next_id = max((d.id for d in existing_dialogs), default=0) + 1
-                new_dialog = Dialog(id=next_id, title="New Dialog", chat_history=[])
-
-                user.add_dialog(new_dialog)
-                save_current_user(user)
-
-                st.session_state.active_dialog_id = new_dialog.id
-                st.session_state.chat_history = new_dialog.chat_history
+                new_dialog = di_container.dialog_repository.create(
+                    messages=[], user_id=user.id
+                )
+                session_state.set_active_dialog(new_dialog)
             st.rerun()
 
 
 def render_sidebar_footer():
     """Render sidebar footer with user info and logout."""
-    st.divider()
 
     if st.user:
         with st.container():
@@ -43,14 +36,13 @@ def render_sidebar_footer():
             if user_picture:
                 col_img, col_info = st.columns([0.3, 0.7])
                 with col_img:
-                    st.image(user_picture, width=50)
+                    st.image(user_picture, width=50)  # type: ignore
                 with col_info:
                     st.markdown(f"**{user_name}**")
             else:
                 st.markdown(f"👤 **{user_name}**")
 
-            st.markdown("---")
-            if st.button("🚪 Logout", use_container_width=True):
+            if st.button("Logout", use_container_width=True, icon="🚪"):
                 st.logout()
 
 

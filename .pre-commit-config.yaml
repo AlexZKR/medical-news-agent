@@ -17,7 +17,8 @@ repos:
     rev: v1.15.0
     hooks:
       - id: mypy
-        additional_dependencies: ["asyncpg-stubs"]
+        args: ["--check-untyped-defs"]
+        additional_dependencies: ["asyncpg-stubs", "pydantic", "types-requests"]
 
   - repo: https://github.com/PyCQA/bandit
     rev: "1.8.3"
