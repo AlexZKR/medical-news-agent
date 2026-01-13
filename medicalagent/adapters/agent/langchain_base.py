@@ -8,6 +8,7 @@ from langchain.agents.middleware import (
     SummarizationMiddleware,
 )
 from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import (
     AIMessage,
     HumanMessage,
@@ -117,7 +118,11 @@ class LangChainAgentService(AgentService):
         return agent
 
     def call_agent(
-        self, prompt: str, chat_history: list[ChatMessage], dialog_id: int
+        self,
+        prompt: str,
+        chat_history: list[ChatMessage],
+        dialog_id: int,
+        callbacks: list[BaseCallbackHandler] | None = None,
     ) -> list[AIMessage]:
         try:
             # 1. GENERATE CONTEXT FROM FINDINGS # TODO: MAKE A MIDDLEWARE
@@ -166,6 +171,7 @@ class LangChainAgentService(AgentService):
                     "env": settings.APP_SETTINGS.ENV,
                     "dialog_id": dialog_id,
                 },
+                callbacks=callbacks,
             )
 
             # 3. INVOKE

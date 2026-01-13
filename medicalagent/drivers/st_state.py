@@ -9,7 +9,7 @@ from .user_service import get_current_user
 class SessionStateManager:
     """Manager class for Streamlit session state with typed getters/setters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the session state manager."""
         self._ensure_initialized()
 

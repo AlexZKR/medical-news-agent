@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 
-def render_auth_ui():
+def render_auth_ui() -> None:
     """Render authentication UI when user is not logged in."""
     st.title("🧬 Medical News Agent")
 
@@ -41,7 +41,7 @@ def render_auth_ui():
             st.login()
 
 
-def main():
+def main() -> None:
     """Main application entry point."""
     if not st.user.is_logged_in:
         render_auth_ui()

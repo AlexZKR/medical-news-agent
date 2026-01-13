@@ -103,7 +103,7 @@ def handle_chat_input() -> None:
         st.rerun()
 
 
-def render_central_chat():
+def render_central_chat() -> None:
     """Renders the central chat interface with research capabilities."""
     user = get_current_user()
     active_dialog_id = session_state.active_dialog_id

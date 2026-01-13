@@ -21,7 +21,7 @@ from medicalagent.ports import (
 class DIContainer:
     """Dependency injection container that provides access to all repositories."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the DI container with concrete implementations."""
         self._dialog_repository = InMemoryDialogRepository()
         self._findings_repository = InMemoryFindingsRepository()
