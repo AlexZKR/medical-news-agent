@@ -177,4 +177,14 @@ class LangChainAgentService(AgentService):
             return [result["messages"][-1]]
 
         except Exception as e:
-            return [AIMessage(content=f"Error: {str(e)}")]
+            logger.error(
+                f"CRITICAL AGENT FAILURE | Dialog ID: {dialog_id} | Error: {str(e)}",
+                exc_info=True,
+            )
+
+            error_message = (
+                f"⚠️ **An internal error occurred.**\n\n"
+                f"Please share this **Dialog ID** with support so we can fix it:\n"
+                f"**`{dialog_id}`**"
+            )
+            return [AIMessage(content=error_message)]

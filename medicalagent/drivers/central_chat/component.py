@@ -5,7 +5,7 @@ import streamlit as st
 from medicalagent.adapters.agent.dialog_title_generator import (
     generate_conversation_title,
 )
-from medicalagent.domain.dialog import DEFAULT_DIALOG_TITLE, ChatMessage
+from medicalagent.domain.dialog import DEFAULT_DIALOG_TITLE, ChatMessage, Dialog
 from medicalagent.drivers.di import di_container
 from medicalagent.drivers.st_state import session_state
 from medicalagent.drivers.user_service import get_current_user
@@ -13,7 +13,7 @@ from medicalagent.drivers.user_service import get_current_user
 logger = getLogger(__name__)
 
 
-def render_chat_header(active_dialog):
+def render_chat_header(active_dialog: Dialog) -> None:
     """Renders the chat interface header."""
     if active_dialog:
         st.subheader(f"💬 {active_dialog.title}")
@@ -21,14 +21,14 @@ def render_chat_header(active_dialog):
         st.subheader("💬 New Conversation")
 
 
-def render_chat_messages(chat_history: list[ChatMessage]):
+def render_chat_messages(chat_history: list[ChatMessage]) -> None:
     """Renders all chat messages in the conversation."""
     for message in chat_history:
         with st.chat_message(message.role):
             st.markdown(message.content)
 
 
-def handle_chat_input():
+def handle_chat_input() -> None:
     """Handles user chat input and generates responses."""
 
     if prompt := st.chat_input("Submit a request", max_chars=1500):
@@ -56,7 +56,7 @@ def handle_chat_input():
 
         # 2. Fetch Context (Now guaranteed to exist)
         dialog = di_container.dialog_repository.get_by_id(active_dialog_id)
-        chat_history = dialog.chat_history
+        chat_history = dialog.chat_history if dialog else []
 
         # 3. Call Agent
         with st.chat_message("assistant"):
