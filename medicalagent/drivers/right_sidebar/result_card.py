@@ -23,11 +23,16 @@ HELP_NON_RELEVANT = (
 HELP_TOGGLE_DETAILS = "Toggle card details"
 
 
-def render_card_header(finding: Finding):
+def render_card_header(finding: Finding, key_suffix: str) -> bool:
     """Renders the card header with title and toggle button."""
 
-    if f"card_expanded_{finding.id}" not in st.session_state:
-        st.session_state[f"card_expanded_{finding.id}"] = True
+    # We use the finding ID for the expansion state so that if the list reorders,
+    # the state (expanded/collapsed) persists for this specific finding.
+    # However, if you have duplicates, they will share this state.
+    state_key = f"card_expanded_{finding.id}"
+
+    if state_key not in st.session_state:
+        st.session_state[state_key] = True
 
     col_title, col_toggle = st.columns([CARD_TITLE_RATIO, CARD_TOGGLE_RATIO])
 
@@ -47,49 +52,48 @@ def render_card_header(finding: Finding):
         with col_toggle:
             toggle_icon = (
                 BUTTON_TOGGLE_COLLAPSE
-                if st.session_state[f"card_expanded_{finding.id}"]
+                if st.session_state[state_key]
                 else BUTTON_TOGGLE_EXPAND
             )
+            # FIX: Add key_suffix to ensure uniqueness
             if st.button(
                 "",
                 icon=toggle_icon,
-                key=f"toggle_{finding.id}",
+                key=f"toggle_{finding.id}_{key_suffix}",
                 help=HELP_TOGGLE_DETAILS,
                 use_container_width=True,
             ):
-                st.session_state[f"card_expanded_{finding.id}"] = not st.session_state[
-                    f"card_expanded_{finding.id}"
-                ]
+                st.session_state[state_key] = not st.session_state[state_key]
                 st.rerun()
 
-    return st.session_state[f"card_expanded_{finding.id}"]
+    return st.session_state[state_key]
 
 
-def render_card_links(item):
+def render_card_links(finding: Finding) -> None:
     """Renders the links section with news and paper sources."""
     # Links section - expandable for multiple sources
-    if item.news_links:
+    if finding.news_links:
         with st.expander("📰 News Sources", expanded=False):
-            for i, link in enumerate(item.news_links, 1):
+            for i, link in enumerate(finding.news_links, 1):
                 st.markdown(f"{i}. [{link.title}]({link.url})")
 
-    if item.paper_links:
+    if finding.paper_links:
         with st.expander("🔬 Scientific Papers", expanded=False):
-            for i, link in enumerate(item.paper_links, 1):
+            for i, link in enumerate(finding.paper_links, 1):
                 st.markdown(f"{i}. [{link.title}]({link.url})")
 
 
-def render_card_popularity(item):
+def render_card_popularity(finding: Finding) -> None:
     """Renders the popularity information."""
-    citations = item.citations
-    websites = item.websites
+    citations = finding.citations
+    websites = finding.websites
     st.caption(f"📊 {citations} citations • 🌐 {websites} sources")
 
 
-def render_card_actions(item):
+def render_card_actions(finding: Finding, key_suffix: str) -> None:
     """Renders the card action buttons."""
-    card_id = item.id
-    is_non_relevant = getattr(item, "non_relevance_mark", False)
+    card_id = finding.id
+    is_non_relevant = getattr(finding, "non_relevance_mark", False)
 
     # Create two columns for the buttons
     col_delete, col_relevance = st.columns(2)
@@ -97,46 +101,46 @@ def render_card_actions(item):
     with col_delete:
         if st.button(
             BUTTON_DELETE,
-            key=f"delete_{card_id}",
+            key=f"delete_{card_id}_{key_suffix}",
             use_container_width=True,
             help=HELP_DELETE,
         ):
-            di_container.findings_repository.delete(item.id)
+            di_container.findings_repository.delete(finding.id)
             st.rerun()
 
     with col_relevance:
         if is_non_relevant:
-            # Show button to mark as relevant
+            # FIX: Add key_suffix
             if st.button(
                 BUTTON_NON_RELEVANT_UNDO,
-                key=f"relevant_{card_id}",
+                key=f"relevant_{card_id}_{key_suffix}",
                 use_container_width=True,
                 help="Mark this finding as relevant again",
             ):
-                di_container.findings_repository.mark_relevant(item.id)
+                di_container.findings_repository.mark_relevant(finding.id)
                 st.rerun()
-        # Show button to mark as non-relevant
+
         elif st.button(
             BUTTON_NON_RELEVANT,
-            key=f"non_relevant_{card_id}",
+            key=f"non_relevant_{card_id}_{key_suffix}",
             use_container_width=True,
             help=HELP_NON_RELEVANT,
         ):
-            di_container.findings_repository.mark_non_relevant(item.id)
+            di_container.findings_repository.mark_non_relevant(finding.id)
             st.rerun()
 
 
-def render_card_content(item):
+def render_card_content(finding: Finding, key_suffix: str) -> None:
     """Renders the expanded card content."""
-    st.caption(item.relevance_reason)
-    render_card_links(item)
-    render_card_popularity(item)
-    render_card_actions(item)
+    st.caption(finding.relevance_reason)
+    render_card_links(finding)
+    render_card_popularity(finding)
+    render_card_actions(finding, key_suffix=key_suffix)
 
 
-def render_result_card(finding: Finding):
+def render_result_card(finding: Finding, key_suffix: str = "") -> None:
     """Renders a single research finding as a collapsible card."""
     with st.container(border=True):
-        is_expanded = render_card_header(finding)
+        is_expanded = render_card_header(finding, key_suffix)
         if is_expanded:
-            render_card_content(finding)
+            render_card_content(finding, key_suffix)

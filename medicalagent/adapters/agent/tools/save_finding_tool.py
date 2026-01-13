@@ -55,6 +55,8 @@ def save_finding_tool(
 
     # 1. Validation
     dialog_id = runtime.context.dialog_id
+    container = runtime.context.container
+
     if dialog_id is None:
         return "Error: No active dialog. Cannot save finding."
 

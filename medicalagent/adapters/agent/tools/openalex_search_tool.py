@@ -1,6 +1,8 @@
+from typing import Any
+
 from langchain_core.tools import tool
 from langgraph.prebuilt.tool_node import ToolRuntime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from medicalagent.infra.requests_transport.exceptions import BaseTransportException
 from medicalagent.infra.requests_transport.schemas import HTTPRequestData
@@ -14,8 +16,24 @@ class OpenAlexInput(BaseModel):
     )
     year_min: int | None = Field(
         default=None,
-        description="Filter for works published after this year (inclusive).",
+        description="Filter for works published after this year (inclusive). Must be an integer.",
     )
+
+    @field_validator("year_min", mode="before")
+    @classmethod
+    def coerce_year_to_int(cls, v: Any) -> int | None:
+        """
+        Coerces string inputs from the LLM into integers to prevent
+        validation errors with strict APIs like Groq.
+        """
+        if v is None or v == "":
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            # If it's truly not a number, let standard pydantic
+            # validation handle the error
+            return v
 
 
 @tool("openalex_search", args_schema=OpenAlexInput)

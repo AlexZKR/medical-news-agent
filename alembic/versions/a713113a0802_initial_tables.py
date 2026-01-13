@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 42228282765d
+Revision ID: a713113a0802
 Revises:
-Create Date: 2026-01-13 10:43:24.500675
+Create Date: 2026-01-13 10:59:10.890690
 
 """
 from collections.abc import Sequence
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '42228282765d'
+revision: str = 'a713113a0802'
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_dialogs_id'), 'dialogs', ['id'], unique=False)
     op.create_index(op.f('ix_dialogs_user_id'), 'dialogs', ['user_id'], unique=False)
     op.create_table('findings',
-    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('dialog_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
     sa.Column('source', sa.String(), nullable=False),

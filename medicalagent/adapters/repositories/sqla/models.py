@@ -29,7 +29,9 @@ class FindingModel(Base):
     __tablename__ = "findings"
 
     # Using String for ID because domain uses UUID strings
-    id = Column(String, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, autoincrement=True
+    )
     dialog_id = Column(Integer, index=True, nullable=False)
 
     title = Column(String, nullable=False)

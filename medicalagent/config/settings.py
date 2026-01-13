@@ -34,8 +34,8 @@ class AISettings(BaseSettings):
     primary_model: str = "moonshotai/kimi-k2-instruct-0905"
     primary_model_max_tokens: int = 10_000
 
-    fallback_model: str = "meta-llama/llama-4-scout-17b-16e-instruct"
-    fallback_model_max_tokens: int = 30_000
+    fallback_model: str = "llama-3.3-70b-versatile"
+    fallback_model_max_tokens: int = 10_000
 
     summarization_model: str = "llama-3.1-8b-instant"
     summarization_model_max_tokens: int = 10_000
