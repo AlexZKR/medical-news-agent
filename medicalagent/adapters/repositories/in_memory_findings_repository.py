@@ -1,13 +1,13 @@
 """In-memory implementation of FindingsRepository."""
 
-from medicalagent.domain.dialog import Finding
+from medicalagent.domain.finding import Finding
 from medicalagent.ports.findings_repository import FindingsRepository
 
 
 class InMemoryFindingsRepository(FindingsRepository):
     """In-memory implementation of FindingsRepository using mock data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the repository."""
         self._findings: list[Finding] = []
 
@@ -19,7 +19,7 @@ class InMemoryFindingsRepository(FindingsRepository):
         """Get all findings for a specific dialog."""
         return [f for f in self._findings if f.dialog_id == dialog_id]
 
-    def get_by_id(self, finding_id: str) -> Finding | None:
+    def get_by_id(self, finding_id: int) -> Finding | None:
         """Get a finding by ID."""
         return next((f for f in self._findings if f.id == finding_id), None)
 
@@ -35,17 +35,17 @@ class InMemoryFindingsRepository(FindingsRepository):
             # Add new finding
             self._findings.append(finding)
 
-    def delete(self, finding_id: str) -> None:
+    def delete(self, finding_id: int) -> None:
         """Delete a finding by ID."""
         self._findings = [f for f in self._findings if f.id != finding_id]
 
-    def mark_non_relevant(self, finding_id: str) -> None:
+    def mark_non_relevant(self, finding_id: int) -> None:
         """Mark a finding as non-relevant."""
         finding = self.get_by_id(finding_id)
         if finding:
             finding.non_relevance_mark = True
 
-    def mark_relevant(self, finding_id: str) -> None:
+    def mark_relevant(self, finding_id: int) -> None:
         """Mark a finding as relevant (removes non-relevance mark)."""
         finding = self.get_by_id(finding_id)
         if finding:

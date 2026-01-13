@@ -1,10 +1,14 @@
 import streamlit as st
+from dotenv import load_dotenv
 
+from medicalagent.config.env_load import load_secrets_into_env
 from medicalagent.drivers.central_chat.component import render_central_chat
+from medicalagent.drivers.di import di_container
 from medicalagent.drivers.left_sidebar.component import render_left_sidebar
 from medicalagent.drivers.right_sidebar.component import render_right_sidebar
-from medicalagent.drivers.st_state import init_state
+from medicalagent.drivers.user_service import create_user
 
+load_dotenv()
 st.set_page_config(
     page_title="Medical News Agent",
     page_icon="🧬",
@@ -13,7 +17,7 @@ st.set_page_config(
 )
 
 
-def render_auth_ui():
+def render_auth_ui() -> None:
     """Render authentication UI when user is not logged in."""
     st.title("🧬 Medical News Agent")
 
@@ -37,13 +41,16 @@ def render_auth_ui():
             st.login()
 
 
-def main():
+def main() -> None:
     """Main application entry point."""
     if not st.user.is_logged_in:
         render_auth_ui()
         return
 
-    init_state()
+    email = str(st.user.email) if st.user.email else ""
+    user = di_container.user_repository.get_by_email(email)
+    if not user:
+        create_user()
 
     render_left_sidebar()
     col_chat, col_right = st.columns([2, 1.1], gap="medium")
@@ -56,4 +63,5 @@ def main():
 
 
 if __name__ == "__main__":
+    load_secrets_into_env()
     main()

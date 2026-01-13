@@ -3,7 +3,7 @@
 import streamlit as st
 
 from ..domain.user import UserData
-from .di import di
+from .di import di_container
 
 
 def get_current_user_email() -> str | None:
@@ -18,45 +18,32 @@ def get_current_user_email() -> str | None:
     return None
 
 
-def get_current_user() -> UserData | None:
+def create_user() -> UserData:
+    """Creates a new user with verified types for MyPy."""
+    email = str(st.user.email) if st.user.email else ""
+    name = str(st.user.name) if isinstance(st.user.name, str) else None
+    picture_val = st.user.get("picture")
+    picture = str(picture_val) if isinstance(picture_val, str) else None
+
+    return di_container.user_repository.create_user(
+        email,
+        name,
+        picture,
+    )
+
+
+def get_current_user() -> UserData:
     """Get the current user's data, creating it if it doesn't exist."""
     email = get_current_user_email()
     if not email:
-        return None
+        st.logout()
+        return  # type: ignore
 
-    user_repo = di.user_repository
+    user_repo = di_container.user_repository
     user_data = user_repo.get_by_email(email)
 
     if not user_data:
-        # Create new user with default data
-        user_data = user_repo.create_default_user(email)
+        st.logout()
+        return  # type: ignore
 
     return user_data
-
-
-def save_current_user(user_data: UserData) -> None:
-    """Save the current user's data."""
-    user_repo = di.user_repository
-    user_repo.save(user_data)
-
-
-def initialize_user_session():
-    """Initialize user-specific session data."""
-    user = get_current_user()
-    if user:
-        # Store user data in session for quick access
-        st.session_state.user_email = user.profile.email
-        st.session_state.user_name = user.profile.display_name
-
-        # Initialize user-specific dialogs
-        if user.get_dialogs():
-            first_dialog = user.get_dialogs()[0]
-            st.session_state.active_dialog_id = first_dialog.id
-            st.session_state.chat_history = first_dialog.chat_history
-        else:
-            st.session_state.active_dialog_id = None
-            st.session_state.chat_history = []
-    else:
-        # Fallback for anonymous users or authentication issues
-        st.session_state.user_email = None
-        st.session_state.user_name = "Anonymous"
