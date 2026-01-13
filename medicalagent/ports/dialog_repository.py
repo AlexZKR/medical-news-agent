@@ -16,11 +16,6 @@ class DialogRepository(ABC):
         pass
 
     @abstractmethod
-    def get_all(self) -> list[Dialog]:
-        """Get all dialogs."""
-        pass
-
-    @abstractmethod
     def get_by_user_id(self, user_id: int) -> list[Dialog]:
         """Get dialogs for user"""
         pass

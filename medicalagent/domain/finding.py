@@ -15,7 +15,7 @@ class Finding(BaseModel):
     status: str
     non_relevance_mark: bool = Field(
         default=False,
-        description="User marks this as non_relevant, which means, that this finding must be used to narrow down the search (exclude similar results)",
+        description="User marks this as non_relevant...",
     )
     news_links: list[Link]
     paper_links: list[Link]

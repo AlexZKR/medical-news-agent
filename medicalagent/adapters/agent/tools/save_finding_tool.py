@@ -1,11 +1,9 @@
-
 from langchain_core.tools import tool
 from langgraph.prebuilt.tool_node import ToolRuntime
 from pydantic import BaseModel, Field
 
 from medicalagent.adapters.agent.langchain_base import AgentContext
 from medicalagent.domain.dialog import Link
-from medicalagent.domain.finding import Finding
 
 
 class LinkSource(BaseModel):
@@ -71,20 +69,17 @@ def save_finding_tool(
     ]
 
     # 3. Create Domain Object
-    new_finding = Finding(
-        dialog_id=int(dialog_id),  # Ensure int matches your model
+    created_finding = container.findings_repository.create(
+        dialog_id=int(dialog_id),
         title=title,
         source=source,
         relevance_reason=relevance_reason,
         citations=citations,
         websites=websites,
-        status="new",
-        non_relevance_mark=False,
         news_links=news_links_objects,
         paper_links=paper_links_objects,
     )
 
-    # 4. Save
-    runtime.context.container.findings_repository.save(new_finding)
-
-    return f"Success: Saved finding '{title}' with {len(news_links_objects)} news and {len(paper_links_objects)} papers."
+    return (
+        f"Success: Saved finding '{created_finding.title}' (ID: {created_finding.id})."
+    )
