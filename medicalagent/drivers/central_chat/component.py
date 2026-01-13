@@ -5,6 +5,7 @@ import streamlit as st
 from medicalagent.adapters.agent.dialog_title_generator import (
     generate_conversation_title,
 )
+from medicalagent.adapters.agent.streamlit_callback import StreamlitStatusCallback
 from medicalagent.domain.dialog import DEFAULT_DIALOG_TITLE, ChatMessage, Dialog
 from medicalagent.drivers.di import di_container
 from medicalagent.drivers.st_state import session_state
@@ -62,12 +63,16 @@ def handle_chat_input() -> None:
         with st.chat_message("assistant"):
             msg_ph = st.empty()
             msg_ph.markdown("🔍 *Researching & verifying...*")
+            status_callback = StreamlitStatusCallback(msg_ph)
 
             try:
                 # Agent can now safely call 'save_finding_tool'
                 # because session_state.active_dialog_id is set.
                 response = di_container.agent_service.call_agent(
-                    prompt, chat_history=chat_history, dialog_id=active_dialog_id
+                    prompt,
+                    chat_history=chat_history,
+                    dialog_id=active_dialog_id,
+                    callbacks=[status_callback],
                 )
                 response_text = (
                     response[0].content
