@@ -97,8 +97,6 @@ class SQLADialogRepository(DialogRepository):
         finally:
             session.close()
 
-    # --- Helper Method ---
-
     def _to_domain(self, db_dialog: DialogModel) -> Dialog:
         """Converts an SQLAlchemy model to a Pydantic Domain model."""
         # Convert list of dicts (from JSONB) back to list of ChatMessage objects

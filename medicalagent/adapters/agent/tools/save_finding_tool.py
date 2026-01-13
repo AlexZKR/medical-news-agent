@@ -1,4 +1,3 @@
-import uuid
 
 from langchain_core.tools import tool
 from langgraph.prebuilt.tool_node import ToolRuntime
@@ -73,7 +72,6 @@ def save_finding_tool(
 
     # 3. Create Domain Object
     new_finding = Finding(
-        id=str(uuid.uuid4()),
         dialog_id=int(dialog_id),  # Ensure int matches your model
         title=title,
         source=source,

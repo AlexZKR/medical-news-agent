@@ -19,7 +19,7 @@ class FindingsRepository(ABC):
         pass
 
     @abstractmethod
-    def get_by_id(self, finding_id: str) -> Finding | None:
+    def get_by_id(self, finding_id: int) -> Finding | None:
         """Get a finding by ID."""
         pass
 
@@ -29,16 +29,16 @@ class FindingsRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, finding_id: str) -> None:
+    def delete(self, finding_id: int) -> None:
         """Delete a finding by ID."""
         pass
 
     @abstractmethod
-    def mark_non_relevant(self, finding_id: str) -> None:
+    def mark_non_relevant(self, finding_id: int) -> None:
         """Mark a finding as non-relevant."""
         pass
 
     @abstractmethod
-    def mark_relevant(self, finding_id: str) -> None:
+    def mark_relevant(self, finding_id: int) -> None:
         """Mark a finding as relevant."""
         pass

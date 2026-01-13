@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class Finding(BaseModel):
     """Finding domain model."""
 
-    id: str
+    id: int
     dialog_id: int
     title: str
     source: str

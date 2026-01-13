@@ -7,7 +7,7 @@ from medicalagent.ports import UserRepository
 class InMemoryUserRepository(UserRepository):
     """In-memory implementation of UserRepository using mock data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the repository."""
         self._users: dict[int, UserData] = {}
 
@@ -24,7 +24,7 @@ class InMemoryUserRepository(UserRepository):
 
     def create_user(
         self, email: str, name: str | None = None, picture: str | None = None
-    ):
+    ) -> UserData:
         """Create a new user with default data."""
         last_id = 0
         if self._users:
